@@ -12,13 +12,27 @@ function main(canvas) {
         floor: '#005500',
         ceiling: '#000055'
 
-}
-//createMap(dimensions, maxTunnels, maxLength)
-    const {map,initX,initY} = createMap(25, 50, 15);
-    //  imageData.data.set(imgArray);
+    }
+    //createMap(dimensions, maxTunnels, maxLength)
+    const { map, initX, initY } = createMap(25, 50, 15);
+    // {
+    //     map: [
+    //         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    //         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    //         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    //         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    //         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    //         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    //         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+
+    //     ], initX: 2, initY: 2
+    // }
+
+    //createMap(25, 50, 15);
+
     let player = {
-        x: initX*tileSize,
-        y: initY*tileSize,
+        x: initX * tileSize,
+        y: initY * tileSize,
         angle: 0,
         fov: toRadians(60),
         spd: 0,
@@ -27,10 +41,10 @@ function main(canvas) {
         size: 5
     }
 
-     setInterval(() => {
+    setInterval(() => {
         clearScreen();
         movePlayer();
-        const rays = getRays();
+        const rays = getRays(w);
         render(rays);
         renderMinimap(0, 0, .2, rays) //position x, y, scale and rays
 
@@ -43,26 +57,38 @@ function main(canvas) {
     }
     //-------------Move Player---------------------/
     function movePlayer() {
+        const { x, y } = player;
         if (keysPressed.includes('arrowup')) {
-            (player.spd >= player.maxSpd) ? player.spd = player.maxSpd : player.spd += player.acc;
+            player.spd = player.maxSpd;
+            collisionCheck(0);
         }
 
         if (keysPressed.includes('arrowdown')) {
-            (player.spd <= -player.maxSpd) ? player.spd = -player.maxSpd : player.spd -= player.acc;
+            player.spd = -player.maxSpd;
+            collisionCheck(Math.PI);
         }
+
         if (!keysPressed.includes('arrowup') && !keysPressed.includes('arrowdown')) player.spd = 0;
+
         if (keysPressed.includes('arrowleft')) player.angle -= .025;
+
         if (keysPressed.includes('arrowright')) player.angle += .025;
+
         (keysPressed.includes('shift')) ? player.maxSpd = 3 : player.maxSpd = 1;
 
-        //move player in direction
-        player.x += Math.cos(player.angle) * player.spd;
-        player.y += Math.sin(player.angle) * player.spd;
+        function collisionCheck(dir) {
+            const collisionRays = getCollisionRays(3, dir);
+            //move player in direction
+            if (collisionRays[0].distance >= 2 && collisionRays[0].distance >= 2 ) {
+                (collisionRays[1].distance <= 8 && collisionRays[1].vertical) ? player.x = x : player.x += Math.cos(player.angle) * player.spd;
+                (collisionRays[1].distance <= 8 && !collisionRays[1].vertical) ? player.y = y : player.y += Math.sin(player.angle) * player.spd;
+            }
+        }
     }
     //-------------Calculate Rays---------------------/
     function toRadians(deg) {
         return (deg * Math.PI) / 180;
-      }
+    }
 
     function outOfBounds(x, y) {
         return (x < 0 || x >= map[0].length || y < 0 || y >= map.length)
@@ -112,38 +138,38 @@ function main(canvas) {
 
     function getHcol(angle) {
         const up = Math.abs(Math.floor(angle / Math.PI) % 2);
-  const firstY = up
-    ? Math.floor(player.y / tileSize) * tileSize
-    : Math.floor(player.y / tileSize) * tileSize + tileSize;
-  const firstX = player.x + (firstY - player.y) / Math.tan(angle);
+        const firstY = up
+            ? Math.floor(player.y / tileSize) * tileSize
+            : Math.floor(player.y / tileSize) * tileSize + tileSize;
+        const firstX = player.x + (firstY - player.y) / Math.tan(angle);
 
-  const yA = up ? -tileSize : tileSize;
-  const xA = yA / Math.tan(angle);
+        const yA = up ? -tileSize : tileSize;
+        const xA = yA / Math.tan(angle);
 
-  let wall;
-  let nextX = firstX;
-  let nextY = firstY;
-  while (!wall) {
-    const tileX = Math.floor(nextX / tileSize);
-    const tileY = up
-      ? Math.floor(nextY / tileSize) - 1
-      : Math.floor(nextY / tileSize);
+        let wall;
+        let nextX = firstX;
+        let nextY = firstY;
+        while (!wall) {
+            const tileX = Math.floor(nextX / tileSize);
+            const tileY = up
+                ? Math.floor(nextY / tileSize) - 1
+                : Math.floor(nextY / tileSize);
 
-    if (outOfBounds(tileX, tileY)) {
-      break;
-    }
+            if (outOfBounds(tileX, tileY)) {
+                break;
+            }
 
-    wall = map[tileY][tileX];
-    if (!wall) {
-      nextX += xA;
-      nextY += yA;
-    }
-  }
-  return {
-    angle,
-    distance: distance(player.x, player.y, nextX, nextY),
-    vertical: false,
-  };
+            wall = map[tileY][tileX];
+            if (!wall) {
+                nextX += xA;
+                nextY += yA;
+            }
+        }
+        return {
+            angle,
+            distance: distance(player.x, player.y, nextX, nextY),
+            vertical: false,
+        };
     }
 
     //function getHcol(angle) { };
@@ -151,12 +177,12 @@ function main(canvas) {
         const vCol = getVcol(angle);
         const hCol = getHcol(angle);
 
-        
+
         return (hCol.distance >= vCol.distance) ? vCol : hCol;
     }
-    function getRays() {
+    function getRays(numberOfRays) {
         const initAngle = player.angle - player.fov / 2;
-        const numberOfRays = w;
+
         const angleStep = player.fov / numberOfRays;
 
         return Array.from({ length: numberOfRays }, (_, i) => {
@@ -166,24 +192,37 @@ function main(canvas) {
             return ray;
         })
     }
+
+    function getCollisionRays(numberOfRays, dir) {
+        const initAngle = (player.angle+dir) - player.fov / 2;
+
+        const angleStep = player.fov / 2;
+
+        return Array.from({ length: numberOfRays }, (_, i) => {
+
+            const angle = initAngle + angleStep;
+            const ray = castRay(angle);
+            return ray;
+        })
+    }
     //-------------Render Scene---------------------/
     function fixFishEye(distance, angle, playerAngle) {
         const diff = angle - playerAngle;
         return distance * Math.cos(diff);
-      }
+    }
 
     function render(rays) {
         rays.forEach((ray, i) => {
             const distance = fixFishEye(ray.distance, ray.angle, player.angle);
-            const wallHeight = ((tileSize * 5)/distance)*277;
+            const wallHeight = ((tileSize * 5) / distance) * 277;
             ctx.fillStyle = ray.vertical ? COLORS.wallDark : COLORS.wallLight;
-            ctx.fillRect(i, h/2 - wallHeight/2, 1, wallHeight);
+            ctx.fillRect(i, h / 2 - wallHeight / 2, 1, wallHeight);
             ctx.fillStyle = COLORS.floor;
             ctx.fillRect(
-              i,
-              h / 2 + wallHeight / 2,
-              1,
-              h / 2 - wallHeight / 2
+                i,
+                h / 2 + wallHeight / 2,
+                1,
+                h / 2 - wallHeight / 2
             );
             ctx.fillStyle = COLORS.ceiling;
             ctx.fillRect(i, 0, 1, h / 2 - wallHeight / 2);
