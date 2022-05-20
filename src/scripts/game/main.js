@@ -7,8 +7,8 @@ function main(canvas) {
     const h = canvas.height
     const tileSize = 32;
     const COLORS = {
-        wallDark: '#777777',
-        wallLight: '#555555',
+        wallDark: [77,77,77],
+        wallLight: [55,55,55],
         floor: '#005500',
         ceiling: '#000055'
 
@@ -52,8 +52,8 @@ function main(canvas) {
     }, 16.667)
 
     function clearScreen() {
-        ctx.fillStyle = 'grey';
-        ctx.fillRect(0, 0, h, w);
+        ctx.fillStyle = 'red';
+        ctx.fillRect(0, 0, w, h);
     }
     //-------------Move Player---------------------/
     function movePlayer() {
@@ -213,18 +213,24 @@ function main(canvas) {
 
     function render(rays) {
         rays.forEach((ray, i) => {
+            const {wallDark: wd, wallLight: wl} = COLORS
             const distance = fixFishEye(ray.distance, ray.angle, player.angle);
+            const d = distance/9;
             const wallHeight = ((tileSize * 5) / distance) * 277;
-            ctx.fillStyle = ray.vertical ? COLORS.wallDark : COLORS.wallLight;
+            ctx.fillStyle = ray.vertical ? `rgb(${wd[0]-d},${wd[1]-d},${wd[2]-d})` : `rgb(${wl[0]-d},${wl[1]-d},${wl[2]-d})`;
             ctx.fillRect(i, h / 2 - wallHeight / 2, 1, wallHeight);
-            ctx.fillStyle = COLORS.floor;
+            //floor color
+            //ctx.fillStyle = `rgb(${44-d},${44-d},${44-d})`;
+            ctx.fillStyle = "green";
             ctx.fillRect(
                 i,
                 h / 2 + wallHeight / 2,
                 1,
                 h / 2 - wallHeight / 2
             );
-            ctx.fillStyle = COLORS.ceiling;
+            //ceiling color
+            //ctx.fillStyle = `rgb  (0,0,${55-d})`;
+            ctx.fillStyle = "blue"
             ctx.fillRect(i, 0, 1, h / 2 - wallHeight / 2);
         })
     }
