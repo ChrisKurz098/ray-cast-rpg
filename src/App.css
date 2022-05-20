@@ -10,7 +10,7 @@ body{
 #canvas {
   image-rendering: pixelated;
   transform-origin: top center;
-  transform: scale(.5);
+  transform: scale(1);
 }
 
 

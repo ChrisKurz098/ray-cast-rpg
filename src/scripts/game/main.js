@@ -2,6 +2,11 @@ import createMap from './generateMap';
 
 let keysPressed = [];
 
+const wallTextureA = new Image();
+wallTextureA.src = require('../../img/wallA.png');
+const wallTextureB = new Image();
+wallTextureB.src = require('../../img/wallB.png');
+
 
 function main(canvas) {
     const ctx = canvas.getContext('2d');
@@ -37,11 +42,11 @@ function main(canvas) {
     // };
 
     //createMap(mapSize, 50, 15);
-
+    console.log(map)
     let player = {
-        x: (initX+1) * tileSize +(tileSize/2),
-        y: (initY+1) * tileSize + (tileSize/2),
-        angle: toRadians(Math.floor(Math.random()*360)),
+        x: (initX + 1) * tileSize + (tileSize / 2),
+        y: (initY + 1) * tileSize + (tileSize / 2),
+        angle: toRadians(Math.floor(Math.random() * 360)),
         fov: toRadians(60),
         spd: 0,
         maxSpd: .8,
@@ -50,11 +55,14 @@ function main(canvas) {
     }
 
     setInterval(() => {
+
         clearScreen();
         movePlayer();
         const rays = getRays(w);
         render(rays);
         renderMinimap(0, 0, .25, rays) //position x, y, scale and rays
+
+
 
     }, 16.667)
 
@@ -226,27 +234,25 @@ function main(canvas) {
     }
 
     function render(rays) {
-        const grd = ctx.createLinearGradient(0, 0, 0, h/2);;
+        const grd = ctx.createLinearGradient(0, 0, 0, h / 2);;
         grd.addColorStop(1, "black");
         grd.addColorStop(0, "grey");
         ctx.fillStyle = grd;
-        ctx.fillRect(0, 0, w, h/2);
-        const grd2 = ctx.createLinearGradient(0, h/2, 0, h);;
+        ctx.fillRect(0, 0, w, h / 2);
+        const grd2 = ctx.createLinearGradient(0, h / 2, 0, h);;
         grd2.addColorStop(0, "black");
         grd2.addColorStop(1, "grey");
         ctx.fillStyle = grd2;
-        ctx.fillRect(0, h/2, w, h);
-     
+        ctx.fillRect(0, h / 2, w, h);
 
-        const wallTextureA = new Image();
-        wallTextureA.src = require('../../img/wallA.png');
-        const wallTextureB = new Image();
-        wallTextureB.src = require('../../img/wallB.png');
+
+     
 
         rays.forEach((ray, i) => {
             const wallIndex = ray.wallIndex;
             const distance = fixFishEye(ray.distance, ray.angle, player.angle);
             const d = distance / 9;
+
             const wallHeight = ((tileSize * 5) / distance) * 277;
             let textureOffset = (ray.vertical) ? ray.endY : ray.endX;
             textureOffset = Math.floor(textureOffset - Math.floor(textureOffset / tileSize) * tileSize);
@@ -263,9 +269,9 @@ function main(canvas) {
                 wallHeight
             );
             //fade to dark in distance
-            ctx.fillStyle = `rgba(00,00,00,${d /75})`;
+            ctx.fillStyle = `rgba(00,00,00,${d / 75})`;
             ctx.fillRect(i, h / 2 - wallHeight / 2, 1, wallHeight);
-  
+
         })
     }
     //-------------Render Mini Map---------------------/
