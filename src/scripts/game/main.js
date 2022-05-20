@@ -8,7 +8,7 @@ function main(canvas) {
     const w = canvas.width;
     const h = canvas.height
     const tileSize = 32;
-    const wallTexture = new Image(256, 256);
+    const wallTexture = new Image();
     wallTexture.src = require('../../img/wallA.png');
 
 
@@ -19,8 +19,9 @@ function main(canvas) {
         ceiling: '#000055'
 
     }
+    const mapSize = 25;
     //createMap(dimensions, maxTunnels, maxLength)
-    const { map, initX, initY } = createMap(25, 50, 15);
+    const { map, initX, initY } = createMap(mapSize, 50, 15);
     // {
     //     map: [
     //         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -52,7 +53,7 @@ function main(canvas) {
         movePlayer();
         const rays = getRays(w);
         render(rays);
-        renderMinimap(0, 0, .2, rays) //position x, y, scale and rays
+        renderMinimap(0, 0, .25, rays) //position x, y, scale and rays
 
     }, 16.667)
 
@@ -76,9 +77,9 @@ function main(canvas) {
 
         if (!keysPressed.includes('arrowup') && !keysPressed.includes('arrowdown')) player.spd = 0;
 
-        if (keysPressed.includes('arrowleft')) player.angle -= .025;
+        if (keysPressed.includes('arrowleft')) player.angle -= .05;
 
-        if (keysPressed.includes('arrowright')) player.angle += .025;
+        if (keysPressed.includes('arrowright')) player.angle += .05;
 
         (keysPressed.includes('shift')) ? player.maxSpd = 3 : player.maxSpd = 1;
 
@@ -139,6 +140,8 @@ function main(canvas) {
             angle,
             distance: distance(player.x, player.y, nextX, nextY),
             vertical: true,
+            endX: nextX,
+            endY: nextY
         };
     }
 
@@ -175,6 +178,8 @@ function main(canvas) {
             angle,
             distance: distance(player.x, player.y, nextX, nextY),
             vertical: false,
+            endX: nextX,
+            endY: nextY
         };
     }
 
@@ -218,41 +223,57 @@ function main(canvas) {
     }
 
     function render(rays) {
-        var imageObj1 = new Image();
-        imageObj1.src = 'https://s-media-cache-ak0.pinimg.com/236x/d7/b3/cf/d7b3cfe04c2dc44400547ea6ef94ba35.jpg'
-        
+        const grd = ctx.createLinearGradient(0, 0, 0, h/2);;
+        grd.addColorStop(1, "black");
+        grd.addColorStop(0, "white");
+        ctx.fillStyle = grd;
+        ctx.fillRect(0, 0, w, h/2);
+        const grd2 = ctx.createLinearGradient(0, h/2, 0, h);;
+        grd2.addColorStop(0, "black");
+        grd2.addColorStop(1, "white");
+        ctx.fillStyle = grd2;
+        ctx.fillRect(0, h/2, w, h);
+     
+
+        const wallTexture = new Image();
+        wallTexture.src = require('../../img/wallA.png');
 
         rays.forEach((ray, i) => {
-            const { wallDark: wd, wallLight: wl } = COLORS
+            //const { wallDark: wd, wallLight: wl } = COLORS
             const distance = fixFishEye(ray.distance, ray.angle, player.angle);
             const d = distance / 9;
             const wallHeight = ((tileSize * 5) / distance) * 277;
-            // ctx.fillStyle = ray.vertical ? `rgba(${wd[0] - d},${wd[1] - d},${wd[2] - d})` : `rgb(${wl[0] - d},${wl[1] - d},${wl[2] - d})`;
-            // ctx.fillRect(i, h / 2 - wallHeight / 2, 1, wallHeight);
+            let textureOffset = (ray.vertical) ? ray.endY : ray.endX;
 
-            ctx.drawImage(imageObj1,
-                0,
+            textureOffset = Math.floor(textureOffset - Math.floor(textureOffset / tileSize) * tileSize);
+            ctx.drawImage(wallTexture,
+                textureOffset,
                 0,
                 1,
-                64,
+                tileSize,
                 i,
                 h / 2 - wallHeight / 2,
                 1,
                 wallHeight
-                );
+            );
+            //fade to dark in distance
+            ctx.fillStyle = `rgba(00,00,00,${d / 75})`;
+            ctx.fillRect(i, h / 2 - wallHeight / 2, 1, wallHeight);
             //floor color
             //ctx.fillStyle = `rgb(${44-d},${44-d},${44-d})`;
-            ctx.fillStyle = "green";
-            ctx.fillRect(
-                i,
-                h / 2 + wallHeight / 2,
-                1,
-                h / 2 - wallHeight / 2
-            );
+            //ctx.fillStyle = "green";
+            // ctx.fillRect(
+            //     i,
+            //     h / 2 + wallHeight / 2,
+            //     1,
+            //     h / 2 - wallHeight / 2
+            // );
             //ceiling color
             //ctx.fillStyle = `rgb  (0,0,${55-d})`;
             // ctx.fillStyle = "blue"
             // ctx.fillRect(i, 0, 1, h / 2 - wallHeight / 2);
+
+  
         })
     }
     //-------------Render Mini Map---------------------/
