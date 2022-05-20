@@ -8,9 +8,6 @@ function main(canvas) {
     const w = canvas.width;
     const h = canvas.height
     const tileSize = 32;
-    const wallTexture = new Image();
-    wallTexture.src = require('../../img/wallA.png');
-
 
     const COLORS = {
         wallDark: [77, 77, 77],
@@ -24,23 +21,27 @@ function main(canvas) {
     const { map, initX, initY } = createMap(mapSize, 50, 15);
     // {
     //     map: [
-    //         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    //         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    //         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    //         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    //         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    //         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    //         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    //     [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
+    //     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    //     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    //     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    //     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    //     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    //     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    //     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    //     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    //     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    //     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
     //     ], initX: 2, initY: 2
-    // }
+    // };
 
-    //createMap(25, 50, 15);
+    //createMap(mapSize, 50, 15);
 
     let player = {
-        x: initX * tileSize,
-        y: initY * tileSize,
-        angle: 0,
+        x: (initX+1) * tileSize +(tileSize/2),
+        y: (initY+1) * tileSize + (tileSize/2),
+        angle: toRadians(Math.floor(Math.random()*360)),
         fov: toRadians(60),
         spd: 0,
         maxSpd: .8,
@@ -81,7 +82,7 @@ function main(canvas) {
 
         if (keysPressed.includes('arrowright')) player.angle += .05;
 
-        (keysPressed.includes('shift')) ? player.maxSpd = 3 : player.maxSpd = 1;
+        (keysPressed.includes('shift')) ? player.maxSpd = 4 : player.maxSpd = 2;
 
         function collisionCheck(dir) {
             const collisionRays = getCollisionRays(3, dir);
@@ -141,7 +142,8 @@ function main(canvas) {
             distance: distance(player.x, player.y, nextX, nextY),
             vertical: true,
             endX: nextX,
-            endY: nextY
+            endY: nextY,
+            wallIndex: wall
         };
     }
 
@@ -179,7 +181,8 @@ function main(canvas) {
             distance: distance(player.x, player.y, nextX, nextY),
             vertical: false,
             endX: nextX,
-            endY: nextY
+            endY: nextY,
+            wallIndex: wall
         };
     }
 
@@ -225,28 +228,31 @@ function main(canvas) {
     function render(rays) {
         const grd = ctx.createLinearGradient(0, 0, 0, h/2);;
         grd.addColorStop(1, "black");
-        grd.addColorStop(0, "white");
+        grd.addColorStop(0, "grey");
         ctx.fillStyle = grd;
         ctx.fillRect(0, 0, w, h/2);
         const grd2 = ctx.createLinearGradient(0, h/2, 0, h);;
         grd2.addColorStop(0, "black");
-        grd2.addColorStop(1, "white");
+        grd2.addColorStop(1, "grey");
         ctx.fillStyle = grd2;
         ctx.fillRect(0, h/2, w, h);
      
 
-        const wallTexture = new Image();
-        wallTexture.src = require('../../img/wallA.png');
+        const wallTextureA = new Image();
+        wallTextureA.src = require('../../img/wallA.png');
+        const wallTextureB = new Image();
+        wallTextureB.src = require('../../img/wallB.png');
 
         rays.forEach((ray, i) => {
-            //const { wallDark: wd, wallLight: wl } = COLORS
+            const wallIndex = ray.wallIndex;
             const distance = fixFishEye(ray.distance, ray.angle, player.angle);
             const d = distance / 9;
             const wallHeight = ((tileSize * 5) / distance) * 277;
             let textureOffset = (ray.vertical) ? ray.endY : ray.endX;
-
             textureOffset = Math.floor(textureOffset - Math.floor(textureOffset / tileSize) * tileSize);
-            ctx.drawImage(wallTexture,
+            //test if wall index number is 2
+            const texture = (wallIndex === 2) ? wallTextureB : wallTextureA;
+            ctx.drawImage(texture,
                 textureOffset,
                 0,
                 1,
@@ -257,22 +263,8 @@ function main(canvas) {
                 wallHeight
             );
             //fade to dark in distance
-            ctx.fillStyle = `rgba(00,00,00,${d / 75})`;
+            ctx.fillStyle = `rgba(00,00,00,${d /75})`;
             ctx.fillRect(i, h / 2 - wallHeight / 2, 1, wallHeight);
-            //floor color
-            //ctx.fillStyle = `rgb(${44-d},${44-d},${44-d})`;
-            //ctx.fillStyle = "green";
-            // ctx.fillRect(
-            //     i,
-            //     h / 2 + wallHeight / 2,
-            //     1,
-            //     h / 2 - wallHeight / 2
-            // );
-            //ceiling color
-            //ctx.fillStyle = `rgb  (0,0,${55-d})`;
-            // ctx.fillStyle = "blue"
-            // ctx.fillRect(i, 0, 1, h / 2 - wallHeight / 2);
-
   
         })
     }
