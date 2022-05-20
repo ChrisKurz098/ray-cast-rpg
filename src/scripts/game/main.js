@@ -1,14 +1,20 @@
 import createMap from './generateMap';
 
 let keysPressed = [];
+
+
 function main(canvas) {
     const ctx = canvas.getContext('2d');
     const w = canvas.width;
     const h = canvas.height
     const tileSize = 32;
+    const wallTexture = new Image(256, 256);
+    wallTexture.src = require('../../img/wallA.png');
+
+
     const COLORS = {
-        wallDark: [77,77,77],
-        wallLight: [55,55,55],
+        wallDark: [77, 77, 77],
+        wallLight: [55, 55, 55],
         floor: '#005500',
         ceiling: '#000055'
 
@@ -48,12 +54,12 @@ function main(canvas) {
         render(rays);
         renderMinimap(0, 0, .2, rays) //position x, y, scale and rays
 
-
     }, 16.667)
 
     function clearScreen() {
         ctx.fillStyle = 'red';
         ctx.fillRect(0, 0, w, h);
+
     }
     //-------------Move Player---------------------/
     function movePlayer() {
@@ -79,7 +85,7 @@ function main(canvas) {
         function collisionCheck(dir) {
             const collisionRays = getCollisionRays(3, dir);
             //move player in direction
-            if (collisionRays[0].distance >= 2 && collisionRays[0].distance >= 2 ) {
+            if (collisionRays[0].distance >= 2 && collisionRays[0].distance >= 2) {
                 (collisionRays[1].distance <= 8 && collisionRays[1].vertical) ? player.x = x : player.x += Math.cos(player.angle) * player.spd;
                 (collisionRays[1].distance <= 8 && !collisionRays[1].vertical) ? player.y = y : player.y += Math.sin(player.angle) * player.spd;
             }
@@ -194,7 +200,7 @@ function main(canvas) {
     }
 
     function getCollisionRays(numberOfRays, dir) {
-        const initAngle = (player.angle+dir) - player.fov / 2;
+        const initAngle = (player.angle + dir) - player.fov / 2;
 
         const angleStep = player.fov / 2;
 
@@ -212,13 +218,28 @@ function main(canvas) {
     }
 
     function render(rays) {
+        var imageObj1 = new Image();
+        imageObj1.src = 'https://s-media-cache-ak0.pinimg.com/236x/d7/b3/cf/d7b3cfe04c2dc44400547ea6ef94ba35.jpg'
+        
+
         rays.forEach((ray, i) => {
-            const {wallDark: wd, wallLight: wl} = COLORS
+            const { wallDark: wd, wallLight: wl } = COLORS
             const distance = fixFishEye(ray.distance, ray.angle, player.angle);
-            const d = distance/9;
+            const d = distance / 9;
             const wallHeight = ((tileSize * 5) / distance) * 277;
-            ctx.fillStyle = ray.vertical ? `rgb(${wd[0]-d},${wd[1]-d},${wd[2]-d})` : `rgb(${wl[0]-d},${wl[1]-d},${wl[2]-d})`;
-            ctx.fillRect(i, h / 2 - wallHeight / 2, 1, wallHeight);
+            // ctx.fillStyle = ray.vertical ? `rgba(${wd[0] - d},${wd[1] - d},${wd[2] - d})` : `rgb(${wl[0] - d},${wl[1] - d},${wl[2] - d})`;
+            // ctx.fillRect(i, h / 2 - wallHeight / 2, 1, wallHeight);
+
+            ctx.drawImage(imageObj1,
+                0,
+                0,
+                1,
+                64,
+                i,
+                h / 2 - wallHeight / 2,
+                1,
+                wallHeight
+                );
             //floor color
             //ctx.fillStyle = `rgb(${44-d},${44-d},${44-d})`;
             ctx.fillStyle = "green";
@@ -230,8 +251,8 @@ function main(canvas) {
             );
             //ceiling color
             //ctx.fillStyle = `rgb  (0,0,${55-d})`;
-            ctx.fillStyle = "blue"
-            ctx.fillRect(i, 0, 1, h / 2 - wallHeight / 2);
+            // ctx.fillStyle = "blue"
+            // ctx.fillRect(i, 0, 1, h / 2 - wallHeight / 2);
         })
     }
     //-------------Render Mini Map---------------------/
