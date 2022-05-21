@@ -123,30 +123,34 @@ function main(canvas) {
                 objAngle += 2.0 * 3.14159;
             if (objAngle > 3.14159)
                 objAngle -= 2.0 * 3.14159;
-        const objHeight = ((tileSize * 5) / objDist) * 277;
+        const objScale = ((tileSize * 5) / objDist) * 277;
             const nx = vecX * Math.cos(player.angle) - vecY*Math.sin(player.angle);
             const ny = vecX * Math.sin(player.angle) + vecY*Math.cos(player.angle);
-
-
-            //const objScale = (objDist/(mapSize*tileSize))
-            const xPos = Math.cos(objAngle) * objAngle;
-            const yPos = Math.sin(objAngle) * objAngle;
+    
             //(h)-h*(objDist/(mapSize*tileSize));
-
+            ctx.strokeStyle = 'green';
+            ctx.beginPath()
+            ctx.moveTo(player.x * .25 + 0, player.y * .25 + 0)
+            ctx.lineTo(
+                (player.x + vecX * objDist) * .25,
+                (player.y + vecY * objDist) * .25,
+            )
+            ctx.closePath();
+            ctx.stroke();
             //draw object
             //add a little bit to FOV to make sure objects render partial off screen
 
             // w / 2 - (w * xPos) - 16,
             // h / 2 + (h * yPos) - 16,
 
-            if (Math.abs(objAngle) <= (player.fov + 0.3) / 2) {
+            if (Math.abs(objAngle) <= (player.fov + 0.5) / 2) {
                 console.log('IN VIEW');
-                console.log(objHeight);
+                console.log(objAngle)
                 ctx.drawImage(obj.sprite,
-                    w / 2 - (w * xPos) - 16,
-                    h / 2 - objHeight / 2,
-                    objHeight,
-                    objHeight,
+                    w / 2 - (w * objAngle+objScale/2),
+                    h / 2 - objScale/2 ,
+                    objScale,
+                    objScale,
                 );
             }
         })
@@ -363,8 +367,8 @@ function main(canvas) {
         objects.forEach(obj => {
             ctx.fillStyle = 'orange'
             ctx.fillRect(
-                posX + obj.x * scale - objSize / 2,
-                posY + obj.y * scale - objSize / 2,
+                posX + (obj.x) * scale - objSize / 2,
+                posY + (obj.y) * scale - objSize / 2,
                 objSize, objSize
             )
         })
