@@ -31,7 +31,7 @@ function main(canvas) {
         x: (initX + 1) * tileSize + (tileSize / 2),
         y: (initY + 1) * tileSize + (tileSize / 2),
         angle: toRadians(Math.floor(Math.random() * 360)),
-        fov: toRadians(60),
+        fov: toRadians(65),
         spd: 0,
         maxSpd: .8,
         acc: .05,
@@ -52,7 +52,7 @@ function main(canvas) {
         zBuffer = [...zBuffer, ...objects]; //add objects to zBuffer
         zBuffer.sort((a, b) => (b.distance - a.distance)); //sort zBuffer to render farthest parts first
         render(zBuffer); //render the zBuffer
-        renderMinimap(0, 0, .5, zBuffer); //position x, y, scale and rays
+        renderMinimap(0, 0, .25, zBuffer); //position x, y, scale and rays
 
     }, 16.667)
 
@@ -72,6 +72,12 @@ function main(canvas) {
     //-------------Move Player---------------------/
     function movePlayer() {
         const { x, y } = player;
+///DEBUG
+if (keysPressed.includes('w')) player.fov+=.01;
+if (keysPressed.includes('s')) player.fov-=.01;
+///END DEBUG
+
+
         if (keysPressed.includes('arrowup')) {
             player.spd = player.maxSpd;
             collisionCheck(0);
@@ -97,10 +103,14 @@ function main(canvas) {
 
         function collisionCheck(dir) {
             const collisionRays = getCollisionRays(3, dir);
-            //move player in direction
+            //move player in direction if no WIDE collision
+
             if (collisionRays[0].distance >= 2 && collisionRays[0].distance >= 2) {
+
                 (collisionRays[1].distance <= 8 && collisionRays[1].vertical) ? player.x = x : player.x += Math.cos(player.angle) * player.spd;
+
                 (collisionRays[1].distance <= 8 && !collisionRays[1].vertical) ? player.y = y : player.y += Math.sin(player.angle) * player.spd;
+
             }
         }
     }
@@ -298,6 +308,8 @@ function main(canvas) {
                         break;
                     default: texture = wallTextureA;
                 }
+
+
                 ctx.drawImage(texture,
                     textureOffset,
                     0,
@@ -308,6 +320,13 @@ function main(canvas) {
                     1,
                     wallHeight
                 );
+                
+                //potential here for lighting effects
+                if (e.vertical) {
+                    // draw color
+                    ctx.fillStyle = "rgba(00,00,00,.42)";
+                    ctx.fillRect(e.sx, h / 2 - wallHeight / 2, 1, wallHeight);
+                }
                 //fade to dark in distance
                 ctx.fillStyle = `rgba(00,00,00,${d / 70})`;
                 ctx.fillRect(e.sx, h / 2 - wallHeight / 2, 1, wallHeight);
@@ -364,7 +383,7 @@ function main(canvas) {
         ctx.stroke();
 
         //render objects
-        const objSize = 10;
+        const objSize = 5;
         objects.forEach(obj => {
             ctx.fillStyle = 'lightgreen'
             ctx.fillRect(
