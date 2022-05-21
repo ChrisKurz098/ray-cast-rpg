@@ -25,23 +25,6 @@ function main(canvas) {
     const mapSize = 20;
     //createMap(dimensions, maxTunnels, maxLength)
     const { map, initX, initY } = createMap(mapSize, 50, 15);
-    console.log(map)
-    // {
-    //     map: [
-    //     [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
-    //     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    //     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    //     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    //     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    //     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    //     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    //     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    //     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    //     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    //     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-
-    //     ], initX: 2, initY: 2
-    // };
 
     //createMap(mapSize, 50, 15);
     let player = {
@@ -56,16 +39,20 @@ function main(canvas) {
     }
     //each object hs {x,y,sprite}
     // x & y should be (0 to dimentions)* tileSize
-    const {x: xx, y: yy} = randomCoord();
+    const { x: xx, y: yy } = randomCoord();
     const objects = [{ x: xx, y: yy, z: 1, sprite: chestA }];
+    //------------------//
     //-----GAME LOOP----//
+    //------------------//
     setInterval(() => {
         clearScreen();
         movePlayer();
-        const rays = getRays(w);
-        render(rays);
-        renderObjects(objects);
-        renderMinimap(0, 0, .5, rays) //position x, y, scale and rays
+        let zBuffer = getRays(w);
+        getObjectsDistance(objects)
+        zBuffer = [...zBuffer, ...objects];
+        zBuffer.sort((a, b) => (b.distance - a.distance))
+        render(zBuffer);
+        renderMinimap(0, 0, .5, zBuffer) //position x, y, scale and rays
 
     }, 16.667)
 
@@ -118,31 +105,38 @@ function main(canvas) {
         }
     }
     //-------------Render Objects---------------------//
-    function renderObjects(objs) {
+    function getObjectsDistance(objs) {
         objs.forEach(obj => {
             // get distance from player
             const objDist = distance(player.x, player.y, obj.x, obj.y);
             //check if obj is in FOV
             const vecX = obj.x - player.x;
             const vecY = obj.y - player.y;
-          
+
             let objAngle = player.angle - Math.atan2(vecY, vecX)
             if (objAngle < -3.14159)
                 objAngle += 2.0 * 3.14159;
             if (objAngle > 3.14159)
                 objAngle -= 2.0 * 3.14159;
-                //find the scale of the object just as we found it for the walls
+            //find the scale of the object just as we found it for the walls
             const objScale = ((tileSize * 5) / objDist) * 277;
 
-            if (Math.abs(objAngle) <= (player.fov + 0.5) / 2) {
-                ctx.drawImage(obj.sprite,
-                    w / 2 - (w * objAngle + objScale / 2),
-                    h / 2 - objScale / 2,
-                    objScale,
-                    objScale,
-                );
-            }
-        })
+            obj.objAngle = objAngle;
+            obj.objScale = objScale;
+            obj.distance = objDist
+        });
+    };
+
+    function renderObject(obj) {
+        if (Math.abs(obj.objAngle) <= (player.fov + 0.5) / 2) {
+            ctx.drawImage(obj.sprite,
+                w / 2 - (w * obj.objAngle + obj.objScale / 2),
+                h / 2 - obj.objScale / 2,
+                obj.objScale,
+                obj.objScale,
+            );
+        }
+
     }
     //-------------Calculate Rays---------------------//
     function toRadians(deg) {
@@ -254,6 +248,7 @@ function main(canvas) {
 
             const angle = initAngle + i * angleStep;
             const ray = castRay(angle);
+            ray.sx = i;
             return ray;
         })
     }
@@ -278,39 +273,43 @@ function main(canvas) {
 
     function render(rays) {
         rays.forEach((ray, i) => {
-            const wallIndex = ray.wallIndex;
-            const distance = fixFishEye(ray.distance, ray.angle, player.angle);
-            const d = distance / 9;
-
-            const wallHeight = ((tileSize * 5) / distance) * 277;
-            let textureOffset = (ray.vertical) ? ray.endY : ray.endX;
-            textureOffset = Math.floor(textureOffset - Math.floor(textureOffset / tileSize) * tileSize);
-            //test if wall index number is 2
-            let texture = wallTextureA;
-            switch (true) {
-                case (wallIndex === 2): 
-                texture = wallTextureB;
-                break;
-                case (wallIndex === 3): 
-                texture = wallTextureC;
-                break;
-                case (wallIndex === 4): 
-                texture = wallTextureD;
-                break;
+            if (ray.sprite) {
+                renderObject(ray)
+            } else {
+                const wallIndex = ray.wallIndex;
+                const distance = fixFishEye(ray.distance, ray.angle, player.angle);
+                const d = distance / 9;
+                const wallHeight = ((tileSize * 5) / distance) * 277;
+                let textureOffset = (ray.vertical) ? ray.endY : ray.endX;
+                textureOffset = Math.floor(textureOffset - Math.floor(textureOffset / tileSize) * tileSize);
+                //test if wall index number is 2
+                let texture;
+                switch (true) {
+                    case (wallIndex === 2):
+                        texture = wallTextureB;
+                        break;
+                    case (wallIndex === 3):
+                        texture = wallTextureC;
+                        break;
+                    case (wallIndex === 4):
+                        texture = wallTextureD;
+                        break;
+                    default: texture = wallTextureA;
+                }
+                ctx.drawImage(texture,
+                    textureOffset,
+                    0,
+                    1,
+                    tileSize,
+                    ray.sx,
+                    h / 2 - wallHeight / 2,
+                    1,
+                    wallHeight
+                );
+                //fade to dark in distance
+                ctx.fillStyle = `rgba(00,00,00,${d / 70})`;
+                ctx.fillRect(ray.sx, h / 2 - wallHeight / 2, 1, wallHeight);
             }
-            ctx.drawImage(texture,
-                textureOffset,
-                0,
-                1,
-                tileSize,
-                i,
-                h / 2 - wallHeight / 2,
-                1,
-                wallHeight
-            );
-            //fade to dark in distance
-            ctx.fillStyle = `rgba(00,00,00,${d / 70})`;
-            ctx.fillRect(i, h / 2 - wallHeight / 2, 1, wallHeight);
 
         })
     }
@@ -375,17 +374,17 @@ function main(canvas) {
 
 
     }
-function randomCoord() {
-    let x = 0;
-    let y = 0;
-    while(map[y][x]) {
-        x = Math.floor(Math.random()* mapSize)
-        y = Math.floor(Math.random()* mapSize)
+    function randomCoord() {
+        let x = 0;
+        let y = 0;
+        while (map[y][x]) {
+            x = Math.floor(Math.random() * mapSize)
+            y = Math.floor(Math.random() * mapSize)
+        }
+        x = x * tileSize + (tileSize / 2);
+        y = y * tileSize + (tileSize / 2);
+        return { x, y };
     }
-    x=x*tileSize+(tileSize/2);
-    y=y*tileSize+(tileSize/2);
-    return {x,y};
-}
 
     ///EVENT LISTENERS///
     document.addEventListener("keyup", logKeyUp);

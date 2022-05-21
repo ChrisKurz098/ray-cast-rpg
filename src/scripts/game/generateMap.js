@@ -4,17 +4,18 @@ function createArray(num, dimensions) {
   for (var y = 0; y < dimensions; y++) {
     array.push([]);
     for (var x = 0; x < dimensions; x++) {
-      let tile = 1;
+      let tile ;
       switch (true) {
         case (sec / y > 1 && sec / x <= 1):
-          tile += 1;
+          tile = 2;
           break;
         case (sec / y <= 1 && sec / x > 1):
-          tile += 2;
+          tile = 3;
           break;
         case (sec / y <= 1 && sec / x <= 1):
-          tile += 3;
+          tile = 4;
           break;
+          default: tile = 1;
 
       }
 
