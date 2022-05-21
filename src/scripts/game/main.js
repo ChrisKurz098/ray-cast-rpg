@@ -6,6 +6,9 @@ const wallTextureA = new Image();
 wallTextureA.src = require('../../img/wallA.png');
 const wallTextureB = new Image();
 wallTextureB.src = require('../../img/wallB.png');
+const grassSprite = new Image();
+grassSprite.src = require('../../img/grass.png');
+
 
 
 function main(canvas) {
@@ -13,15 +16,7 @@ function main(canvas) {
     const w = canvas.width;
     const h = canvas.height
     const tileSize = 32;
-
-    const COLORS = {
-        wallDark: [77, 77, 77],
-        wallLight: [55, 55, 55],
-        floor: '#005500',
-        ceiling: '#000055'
-
-    }
-    const mapSize = 25;
+    const mapSize = 20;
     //createMap(dimensions, maxTunnels, maxLength)
     const { map, initX, initY } = createMap(mapSize, 50, 15);
     // {
@@ -42,7 +37,6 @@ function main(canvas) {
     // };
 
     //createMap(mapSize, 50, 15);
-    console.log(map)
     let player = {
         x: (initX + 1) * tileSize + (tileSize / 2),
         y: (initY + 1) * tileSize + (tileSize / 2),
@@ -53,22 +47,31 @@ function main(canvas) {
         acc: .05,
         size: 5
     }
-
+//each object hs {x,y,sprite}
+// x & y should be (0 to dimentions)* tileSize
+    const objects = [{x: player.x,y: player.y,sprite:grassSprite}];
+    //-----GAME LOOP----//
     setInterval(() => {
-
         clearScreen();
         movePlayer();
         const rays = getRays(w);
         render(rays);
+        renderObjects(objects);
         renderMinimap(0, 0, .25, rays) //position x, y, scale and rays
-
-
 
     }, 16.667)
 
     function clearScreen() {
-        ctx.fillStyle = 'red';
-        ctx.fillRect(0, 0, w, h);
+        const grd = ctx.createLinearGradient(0, 0, 0, h / 2);;
+        grd.addColorStop(1, "black");
+        grd.addColorStop(0, "grey");
+        ctx.fillStyle = grd;
+        ctx.fillRect(0, 0, w, h / 2);
+        const grd2 = ctx.createLinearGradient(0, h / 2, 0, h);;
+        grd2.addColorStop(0, "black");
+        grd2.addColorStop(1, "grey");
+        ctx.fillStyle = grd2;
+        ctx.fillRect(0, h / 2, w, h);
 
     }
     //-------------Move Player---------------------/
@@ -86,9 +89,14 @@ function main(canvas) {
 
         if (!keysPressed.includes('arrowup') && !keysPressed.includes('arrowdown')) player.spd = 0;
 
-        if (keysPressed.includes('arrowleft')) player.angle -= .05;
+        if (keysPressed.includes('arrowleft')) {
+            player.angle = (player.angle-.05 <=0) ? 2*Math.PI : player.angle-0.05;
 
-        if (keysPressed.includes('arrowright')) player.angle += .05;
+        }
+
+        if (keysPressed.includes('arrowright')) {
+            player.angle = (player.angle+.05 > 2*Math.PI) ? 0 : player.angle+0.05;
+        }
 
         (keysPressed.includes('shift')) ? player.maxSpd = 4 : player.maxSpd = 2;
 
@@ -101,7 +109,36 @@ function main(canvas) {
             }
         }
     }
-    //-------------Calculate Rays---------------------/
+    //-------------Render Objects---------------------//
+    function renderObjects(objs) {
+        objs.forEach(obj => {
+            // get distance from player
+            const objDist = distance(player.x, player.y, obj.x, obj.y);
+            //check if obj is in FOV
+            const vecX = obj.x - player.x;
+            const vecY = obj.y - player.y;
+            let objAngle = player.angle - Math.atan2(vecY, vecX)
+			if (objAngle < -3.14159)
+				objAngle += 2.0 * 3.14159;
+			if (objAngle > 3.14159)
+				objAngle -= 2.0 * 3.14159;
+
+            const objScale = (objDist/(mapSize*tileSize))
+            console.log(objAngle, player.angle, player.fov/2)
+        
+            //draw object
+           if (Math.abs(objAngle) <= player.fov/2) {
+          console.log('IN VIEW')
+                ctx.drawImage(obj.sprite,
+                    w/2,
+                    h/2,
+                    objScale,
+                    objScale,
+                );
+            }
+        })
+    }
+    //-------------Calculate Rays---------------------//
     function toRadians(deg) {
         return (deg * Math.PI) / 180;
     }
@@ -234,20 +271,6 @@ function main(canvas) {
     }
 
     function render(rays) {
-        const grd = ctx.createLinearGradient(0, 0, 0, h / 2);;
-        grd.addColorStop(1, "black");
-        grd.addColorStop(0, "grey");
-        ctx.fillStyle = grd;
-        ctx.fillRect(0, 0, w, h / 2);
-        const grd2 = ctx.createLinearGradient(0, h / 2, 0, h);;
-        grd2.addColorStop(0, "black");
-        grd2.addColorStop(1, "grey");
-        ctx.fillStyle = grd2;
-        ctx.fillRect(0, h / 2, w, h);
-
-
-     
-
         rays.forEach((ray, i) => {
             const wallIndex = ray.wallIndex;
             const distance = fixFishEye(ray.distance, ray.angle, player.angle);
@@ -269,7 +292,7 @@ function main(canvas) {
                 wallHeight
             );
             //fade to dark in distance
-            ctx.fillStyle = `rgba(00,00,00,${d / 75})`;
+            ctx.fillStyle = `rgba(00,00,00,${d / 70})`;
             ctx.fillRect(i, h / 2 - wallHeight / 2, 1, wallHeight);
 
         })
@@ -321,6 +344,17 @@ function main(canvas) {
         )
         ctx.closePath();
         ctx.stroke();
+
+        //render objects
+       const objSize = 5;
+        objects.forEach(obj => {
+            ctx.fillStyle = 'orange'
+            ctx.fillRect(
+                posX + obj.x * scale - objSize / 2,
+                posY + obj.y * scale - objSize / 2,
+                objSize, objSize
+            )
+        })
 
 
     }
