@@ -6,6 +6,11 @@ const wallTextureA = new Image();
 wallTextureA.src = require('../../img/wallA.png');
 const wallTextureB = new Image();
 wallTextureB.src = require('../../img/wallB.png');
+const wallTextureC = new Image();
+wallTextureC.src = require('../../img/wallC.png');
+const wallTextureD = new Image();
+wallTextureD.src = require('../../img/wallD.png');
+
 const chestA = new Image();
 chestA.src = require('../../img/chestA.png');
 
@@ -20,6 +25,7 @@ function main(canvas) {
     const mapSize = 20;
     //createMap(dimensions, maxTunnels, maxLength)
     const { map, initX, initY } = createMap(mapSize, 50, 15);
+    console.log(map)
     // {
     //     map: [
     //     [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
@@ -50,7 +56,8 @@ function main(canvas) {
     }
     //each object hs {x,y,sprite}
     // x & y should be (0 to dimentions)* tileSize
-    const objects = [{ x: player.x, y: player.y, z: 1, sprite: chestA }];
+    const {x: xx, y: yy} = randomCoord();
+    const objects = [{ x: xx, y: yy, z: 1, sprite: chestA }];
     //-----GAME LOOP----//
     setInterval(() => {
         clearScreen();
@@ -58,7 +65,7 @@ function main(canvas) {
         const rays = getRays(w);
         render(rays);
         renderObjects(objects);
-        renderMinimap(0, 0, .25, rays) //position x, y, scale and rays
+        renderMinimap(0, 0, .5, rays) //position x, y, scale and rays
 
     }, 16.667)
 
@@ -118,7 +125,7 @@ function main(canvas) {
             //check if obj is in FOV
             const vecX = obj.x - player.x;
             const vecY = obj.y - player.y;
-            const vecZ = obj.z;
+          
             let objAngle = player.angle - Math.atan2(vecY, vecX)
             if (objAngle < -3.14159)
                 objAngle += 2.0 * 3.14159;
@@ -127,13 +134,7 @@ function main(canvas) {
                 //find the scale of the object just as we found it for the walls
             const objScale = ((tileSize * 5) / objDist) * 277;
 
-
-
-
-
             if (Math.abs(objAngle) <= (player.fov + 0.5) / 2) {
-                console.log('IN VIEW');
-                console.log(objAngle)
                 ctx.drawImage(obj.sprite,
                     w / 2 - (w * objAngle + objScale / 2),
                     h / 2 - objScale / 2,
@@ -285,7 +286,18 @@ function main(canvas) {
             let textureOffset = (ray.vertical) ? ray.endY : ray.endX;
             textureOffset = Math.floor(textureOffset - Math.floor(textureOffset / tileSize) * tileSize);
             //test if wall index number is 2
-            const texture = (wallIndex === 2) ? wallTextureB : wallTextureA;
+            let texture = wallTextureA;
+            switch (true) {
+                case (wallIndex === 2): 
+                texture = wallTextureB;
+                break;
+                case (wallIndex === 3): 
+                texture = wallTextureC;
+                break;
+                case (wallIndex === 4): 
+                texture = wallTextureD;
+                break;
+            }
             ctx.drawImage(texture,
                 textureOffset,
                 0,
@@ -351,9 +363,9 @@ function main(canvas) {
         ctx.stroke();
 
         //render objects
-        const objSize = 5;
+        const objSize = 10;
         objects.forEach(obj => {
-            ctx.fillStyle = 'orange'
+            ctx.fillStyle = 'lightgreen'
             ctx.fillRect(
                 posX + (obj.x) * scale - objSize / 2,
                 posY + (obj.y) * scale - objSize / 2,
@@ -363,7 +375,17 @@ function main(canvas) {
 
 
     }
-
+function randomCoord() {
+    let x = 0;
+    let y = 0;
+    while(map[y][x]) {
+        x = Math.floor(Math.random()* mapSize)
+        y = Math.floor(Math.random()* mapSize)
+    }
+    x=x*tileSize+(tileSize/2);
+    y=y*tileSize+(tileSize/2);
+    return {x,y};
+}
 
     ///EVENT LISTENERS///
     document.addEventListener("keyup", logKeyUp);

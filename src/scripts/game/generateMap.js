@@ -1,9 +1,24 @@
 function createArray(num, dimensions) {
+  const sec = dimensions / 2;
   var array = [];
-  for (var i = 0; i < dimensions; i++) {
+  for (var y = 0; y < dimensions; y++) {
     array.push([]);
-    for (var j = 0; j < dimensions; j++) {
-      array[i].push(num + (Math.round(Math.random())));
+    for (var x = 0; x < dimensions; x++) {
+      let tile = 1;
+      switch (true) {
+        case (sec / y > 1 && sec / x <= 1):
+          tile += 1;
+          break;
+        case (sec / y <= 1 && sec / x > 1):
+          tile += 2;
+          break;
+        case (sec / y <= 1 && sec / x <= 1):
+          tile += 3;
+          break;
+
+      }
+
+      array[y].push(tile);
     }
   }
   return array;
@@ -14,8 +29,8 @@ function createMap(dimensions, maxTunnels, maxLength) {
 
   const map = createArray(1, dimensions) // create a 2d array full of 1's
   const hor = Array.from({ length: dimensions + 2 }, () => 1);
-  const initX = Math.floor(Math.random()*dimensions) // our current row - start at a random spot
-  const initY = Math.floor(Math.random()*dimensions) // our current column - start at a random spot
+  const initX = Math.floor(Math.random() * dimensions) // our current row - start at a random spot
+  const initY = Math.floor(Math.random() * dimensions) // our current column - start at a random spot
   let currentRow = initY // our current row - start at a random spot
   let currentColumn = initX // our current column - start at a random spot
   const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]] // array to get a random direction from (left,right,up,down)
