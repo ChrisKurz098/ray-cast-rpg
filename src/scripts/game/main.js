@@ -47,12 +47,12 @@ function main(canvas) {
     setInterval(() => {
         clearScreen();
         movePlayer();
-        let zBuffer = getRays(w);
-        getObjectsDistance(objects)
-        zBuffer = [...zBuffer, ...objects];
-        zBuffer.sort((a, b) => (b.distance - a.distance))
-        render(zBuffer);
-        renderMinimap(0, 0, .5, zBuffer) //position x, y, scale and rays
+        let zBuffer = getRays(w); //put all rays in z-buffer
+        getObjectsDistance(objects); //find the distance, angle and scale of each object
+        zBuffer = [...zBuffer, ...objects]; //add objects to zBuffer
+        zBuffer.sort((a, b) => (b.distance - a.distance)); //sort zBuffer to render farthest parts first
+        render(zBuffer); //render the zBuffer
+        renderMinimap(0, 0, .5, zBuffer); //position x, y, scale and rays
 
     }, 16.667)
 
@@ -271,16 +271,18 @@ function main(canvas) {
         return distance * Math.cos(diff);
     }
 
-    function render(rays) {
-        rays.forEach((ray, i) => {
-            if (ray.sprite) {
-                renderObject(ray)
+    function render(zBuffer) {
+        zBuffer.forEach((e, i) => {
+            //if the current element has a 'sprite' key, its an object
+            if (e.sprite) {
+                renderObject(e); //render the object
             } else {
-                const wallIndex = ray.wallIndex;
-                const distance = fixFishEye(ray.distance, ray.angle, player.angle);
+                //if not an object render the slice of wall
+                const wallIndex = e.wallIndex;
+                const distance = fixFishEye(e.distance, e.angle, player.angle);
                 const d = distance / 9;
                 const wallHeight = ((tileSize * 5) / distance) * 277;
-                let textureOffset = (ray.vertical) ? ray.endY : ray.endX;
+                let textureOffset = (e.vertical) ? e.endY : e.endX;
                 textureOffset = Math.floor(textureOffset - Math.floor(textureOffset / tileSize) * tileSize);
                 //test if wall index number is 2
                 let texture;
@@ -301,14 +303,14 @@ function main(canvas) {
                     0,
                     1,
                     tileSize,
-                    ray.sx,
+                    e.sx,
                     h / 2 - wallHeight / 2,
                     1,
                     wallHeight
                 );
                 //fade to dark in distance
                 ctx.fillStyle = `rgba(00,00,00,${d / 70})`;
-                ctx.fillRect(ray.sx, h / 2 - wallHeight / 2, 1, wallHeight);
+                ctx.fillRect(e.sx, h / 2 - wallHeight / 2, 1, wallHeight);
             }
 
         })
