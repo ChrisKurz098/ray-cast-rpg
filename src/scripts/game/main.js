@@ -6,13 +6,14 @@ const wallTextureA = new Image();
 wallTextureA.src = require('../../img/wallA.png');
 const wallTextureB = new Image();
 wallTextureB.src = require('../../img/wallB.png');
-const grassSprite = new Image();
-grassSprite.src = require('../../img/grass.png');
+const chestA = new Image();
+chestA.src = require('../../img/chestA.png');
 
 
 
 function main(canvas) {
     const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
     const w = canvas.width;
     const h = canvas.height
     const tileSize = 32;
@@ -49,7 +50,7 @@ function main(canvas) {
     }
     //each object hs {x,y,sprite}
     // x & y should be (0 to dimentions)* tileSize
-    const objects = [{ x: player.x, y: player.y, z: 1, sprite: grassSprite }];
+    const objects = [{ x: player.x, y: player.y, z: 1, sprite: chestA }];
     //-----GAME LOOP----//
     setInterval(() => {
         clearScreen();
@@ -123,32 +124,19 @@ function main(canvas) {
                 objAngle += 2.0 * 3.14159;
             if (objAngle > 3.14159)
                 objAngle -= 2.0 * 3.14159;
-        const objScale = ((tileSize * 5) / objDist) * 277;
-            const nx = vecX * Math.cos(player.angle) - vecY*Math.sin(player.angle);
-            const ny = vecX * Math.sin(player.angle) + vecY*Math.cos(player.angle);
-    
-            //(h)-h*(objDist/(mapSize*tileSize));
-            ctx.strokeStyle = 'green';
-            ctx.beginPath()
-            ctx.moveTo(player.x * .25 + 0, player.y * .25 + 0)
-            ctx.lineTo(
-                (player.x + vecX * objDist) * .25,
-                (player.y + vecY * objDist) * .25,
-            )
-            ctx.closePath();
-            ctx.stroke();
-            //draw object
-            //add a little bit to FOV to make sure objects render partial off screen
+                //find the scale of the object just as we found it for the walls
+            const objScale = ((tileSize * 5) / objDist) * 277;
 
-            // w / 2 - (w * xPos) - 16,
-            // h / 2 + (h * yPos) - 16,
+
+
+
 
             if (Math.abs(objAngle) <= (player.fov + 0.5) / 2) {
                 console.log('IN VIEW');
                 console.log(objAngle)
                 ctx.drawImage(obj.sprite,
-                    w / 2 - (w * objAngle+objScale/2),
-                    h / 2 - objScale/2 ,
+                    w / 2 - (w * objAngle + objScale / 2),
+                    h / 2 - objScale / 2,
                     objScale,
                     objScale,
                 );
