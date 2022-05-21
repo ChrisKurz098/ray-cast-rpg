@@ -47,9 +47,9 @@ function main(canvas) {
         acc: .05,
         size: 5
     }
-//each object hs {x,y,sprite}
-// x & y should be (0 to dimentions)* tileSize
-    const objects = [{x: player.x,y: player.y,sprite:grassSprite}];
+    //each object hs {x,y,sprite}
+    // x & y should be (0 to dimentions)* tileSize
+    const objects = [{ x: player.x, y: player.y, z: 1, sprite: grassSprite }];
     //-----GAME LOOP----//
     setInterval(() => {
         clearScreen();
@@ -90,12 +90,12 @@ function main(canvas) {
         if (!keysPressed.includes('arrowup') && !keysPressed.includes('arrowdown')) player.spd = 0;
 
         if (keysPressed.includes('arrowleft')) {
-            player.angle = (player.angle-.05 <=0) ? 2*Math.PI : player.angle-0.05;
+            player.angle = (player.angle - .05 <= 0) ? 2 * Math.PI : player.angle - 0.05;
 
         }
 
         if (keysPressed.includes('arrowright')) {
-            player.angle = (player.angle+.05 > 2*Math.PI) ? 0 : player.angle+0.05;
+            player.angle = (player.angle + .05 > 2 * Math.PI) ? 0 : player.angle + 0.05;
         }
 
         (keysPressed.includes('shift')) ? player.maxSpd = 4 : player.maxSpd = 2;
@@ -117,23 +117,36 @@ function main(canvas) {
             //check if obj is in FOV
             const vecX = obj.x - player.x;
             const vecY = obj.y - player.y;
+            const vecZ = obj.z;
             let objAngle = player.angle - Math.atan2(vecY, vecX)
-			if (objAngle < -3.14159)
-				objAngle += 2.0 * 3.14159;
-			if (objAngle > 3.14159)
-				objAngle -= 2.0 * 3.14159;
+            if (objAngle < -3.14159)
+                objAngle += 2.0 * 3.14159;
+            if (objAngle > 3.14159)
+                objAngle -= 2.0 * 3.14159;
+        const objHeight = ((tileSize * 5) / objDist) * 277;
+            const nx = vecX * Math.cos(player.angle) - vecY*Math.sin(player.angle);
+            const ny = vecX * Math.sin(player.angle) + vecY*Math.cos(player.angle);
 
-            const objScale = (objDist/(mapSize*tileSize))
-            console.log(objAngle, player.angle, player.fov/2)
-        
+
+            //const objScale = (objDist/(mapSize*tileSize))
+            const xPos = Math.cos(objAngle) * objAngle;
+            const yPos = Math.sin(objAngle) * objAngle;
+            //(h)-h*(objDist/(mapSize*tileSize));
+
             //draw object
-           if (Math.abs(objAngle) <= player.fov/2) {
-          console.log('IN VIEW')
+            //add a little bit to FOV to make sure objects render partial off screen
+
+            // w / 2 - (w * xPos) - 16,
+            // h / 2 + (h * yPos) - 16,
+
+            if (Math.abs(objAngle) <= (player.fov + 0.3) / 2) {
+                console.log('IN VIEW');
+                console.log(objHeight);
                 ctx.drawImage(obj.sprite,
-                    w/2,
-                    h/2,
-                    objScale,
-                    objScale,
+                    w / 2 - (w * xPos) - 16,
+                    h / 2 - objHeight / 2,
+                    objHeight,
+                    objHeight,
                 );
             }
         })
@@ -334,7 +347,7 @@ function main(canvas) {
             player.size, player.size
         )
         //render player direction
-        const rayLength = player.size * 2;
+        const rayLength = player.size * 20;
         ctx.strokeStyle = 'red';
         ctx.beginPath()
         ctx.moveTo(player.x * scale + posX, player.y * scale + posY)
@@ -346,7 +359,7 @@ function main(canvas) {
         ctx.stroke();
 
         //render objects
-       const objSize = 5;
+        const objSize = 5;
         objects.forEach(obj => {
             ctx.fillStyle = 'orange'
             ctx.fillRect(
