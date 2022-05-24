@@ -80,11 +80,6 @@ function main(canvas) {
     //-------------Move Player---------------------/
     function movePlayer() {
         const { x, y } = player;
-        ///DEBUG
-        if (keysPressed.includes('w')) player.fov += .01;
-        if (keysPressed.includes('s')) player.fov -= .01;
-        ///END DEBUG
-
 
         if (keysPressed.includes('arrowup')) {
             player.spd = player.maxSpd;
@@ -337,7 +332,7 @@ function main(canvas) {
                 const wallIndex = e.wallIndex;
                 const distance = fixFishEye(e.distance, e.angle, player.angle);
                 const d = distance / 9;
-                const wallHeight = Math.floor(((tileSize ) / distance) * player.projDist);
+                const wallHeight = Math.floor((tileSize  / distance) * player.projDist);
                 let textureOffset = (e.vertical) ? e.endY : e.endX;
                 textureOffset = Math.floor(textureOffset - Math.floor(textureOffset / tileSize) * tileSize);
                 //test if wall index number is 2
@@ -395,20 +390,29 @@ function main(canvas) {
                     const dist = sld / Math.cos(Beta);
 
                     let x = (player.x + Math.cos(e.angle) * dist)
-                    let y = (player.y - Math.sin(e.angle) * dist);
-                    
+                    let y = (player.y + Math.sin(e.angle) * dist);
 
-                    const tx = Math.floor(x - Math.floor(x / tileSize) * tileSize);
-                    const ty = Math.floor(y - Math.floor(y / tileSize) * tileSize);
+                    //texWidth * floorTexY + floorTexX
 
-                    
+                    //floor
                         ctx.drawImage(floorTexture,
-                            tx,
-                            ty,
+                            x&(tileSize-1),
+                            y&(tileSize-1),
                             1,
                             1,
                             xPos,
                             row,
+                            1,
+                            1
+                        );
+                        //ceiling
+                        ctx.drawImage(floorTexture,
+                            x&(tileSize-1),
+                            y&(tileSize-1),
+                            1,
+                            1,
+                            xPos,
+                            h-row,
                             1,
                             1
                         );
