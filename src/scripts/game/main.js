@@ -10,6 +10,8 @@ const wallTextureC = new Image();
 wallTextureC.src = require('../../img/wallC.png');
 const wallTextureD = new Image();
 wallTextureD.src = require('../../img/wallD.png');
+const floorTexture = new Image();
+floorTexture.src = require('../../img/floor.png');
 
 const chestA = new Image();
 chestA.src = require('../../img/chestA.png');
@@ -30,6 +32,7 @@ function main(canvas) {
     let player = {
         x: (initX + 1) * tileSize + (tileSize / 2),
         y: (initY + 1) * tileSize + (tileSize / 2),
+        z: h / 2,
         angle: toRadians(Math.floor(Math.random() * 360)),
         fov: toRadians(65),
         spd: 0,
@@ -72,10 +75,10 @@ function main(canvas) {
     //-------------Move Player---------------------/
     function movePlayer() {
         const { x, y } = player;
-///DEBUG
-if (keysPressed.includes('w')) player.fov+=.01;
-if (keysPressed.includes('s')) player.fov-=.01;
-///END DEBUG
+        ///DEBUG
+        if (keysPressed.includes('w')) player.fov += .01;
+        if (keysPressed.includes('s')) player.fov -= .01;
+        ///END DEBUG
 
 
         if (keysPressed.includes('arrowup')) {
@@ -161,7 +164,7 @@ if (keysPressed.includes('s')) player.fov-=.01;
     }
 
 
-    function getVcol(angle) {
+    function getVcol(angle, floor) {
         const right = Math.abs(Math.floor((angle - Math.PI / 2) / Math.PI) % 2);
 
         const firstX = right
@@ -176,20 +179,39 @@ if (keysPressed.includes('s')) player.fov-=.01;
         let wall;
         let nextX = firstX;
         let nextY = firstY;
-        while (!wall) {
-            const tileX = right
-                ? Math.floor(nextX / tileSize)
-                : Math.floor(nextX / tileSize) - 1;
-            const tileY = Math.floor(nextY / tileSize);
+        if (floor) {
+            while (wall) {
+                const tileX = right
+                    ? Math.floor(nextX / tileSize)
+                    : Math.floor(nextX / tileSize) - 1;
+                const tileY = Math.floor(nextY / tileSize);
 
-            if (outOfBounds(tileX, tileY)) {
-                break;
+                if (outOfBounds(tileX, tileY)) {
+                    break;
+                }
+                wall = map[tileY][tileX];
+                if (!wall) {
+                    nextX += xA;
+                    nextY += yA;
+                } else {
+                }
             }
-            wall = map[tileY][tileX];
-            if (!wall) {
-                nextX += xA;
-                nextY += yA;
-            } else {
+        } else {
+            while (!wall) {
+                const tileX = right
+                    ? Math.floor(nextX / tileSize)
+                    : Math.floor(nextX / tileSize) - 1;
+                const tileY = Math.floor(nextY / tileSize);
+
+                if (outOfBounds(tileX, tileY)) {
+                    break;
+                }
+                wall = map[tileY][tileX];
+                if (!wall) {
+                    nextX += xA;
+                    nextY += yA;
+                } else {
+                }
             }
         }
         return {
@@ -202,7 +224,7 @@ if (keysPressed.includes('s')) player.fov-=.01;
         };
     }
 
-    function getHcol(angle) {
+    function getHcol(angle, floor) {
         const up = Math.abs(Math.floor(angle / Math.PI) % 2);
         const firstY = up
             ? Math.floor(player.y / tileSize) * tileSize
@@ -215,20 +237,39 @@ if (keysPressed.includes('s')) player.fov-=.01;
         let wall;
         let nextX = firstX;
         let nextY = firstY;
-        while (!wall) {
-            const tileX = Math.floor(nextX / tileSize);
-            const tileY = up
-                ? Math.floor(nextY / tileSize) - 1
-                : Math.floor(nextY / tileSize);
+        if (floor) {
+            while (wall) {
+                const tileX = Math.floor(nextX / tileSize);
+                const tileY = up
+                    ? Math.floor(nextY / tileSize) - 1
+                    : Math.floor(nextY / tileSize);
 
-            if (outOfBounds(tileX, tileY)) {
-                break;
+                if (outOfBounds(tileX, tileY)) {
+                    break;
+                }
+
+                wall = map[tileY][tileX];
+                if (!wall) {
+                    nextX += xA;
+                    nextY += yA;
+                }
             }
+        } else {
+            while (!wall) {
+                const tileX = Math.floor(nextX / tileSize);
+                const tileY = up
+                    ? Math.floor(nextY / tileSize) - 1
+                    : Math.floor(nextY / tileSize);
 
-            wall = map[tileY][tileX];
-            if (!wall) {
-                nextX += xA;
-                nextY += yA;
+                if (outOfBounds(tileX, tileY)) {
+                    break;
+                }
+
+                wall = map[tileY][tileX];
+                if (!wall) {
+                    nextX += xA;
+                    nextY += yA;
+                }
             }
         }
         return {
@@ -291,7 +332,7 @@ if (keysPressed.includes('s')) player.fov-=.01;
                 const wallIndex = e.wallIndex;
                 const distance = fixFishEye(e.distance, e.angle, player.angle);
                 const d = distance / 9;
-                const wallHeight = ((tileSize * 5) / distance) * 277;
+                const wallHeight = Math.floor(((tileSize * 5) / distance) * 277);
                 let textureOffset = (e.vertical) ? e.endY : e.endX;
                 textureOffset = Math.floor(textureOffset - Math.floor(textureOffset / tileSize) * tileSize);
                 //test if wall index number is 2
@@ -309,27 +350,76 @@ if (keysPressed.includes('s')) player.fov-=.01;
                     default: texture = wallTextureA;
                 }
 
+                const xPos = e.sx;
+                const yPos = Math.floor(h / 2 - wallHeight / 2);
 
+            
                 ctx.drawImage(texture,
                     textureOffset,
                     0,
                     1,
                     tileSize,
-                    e.sx,
-                    h / 2 - wallHeight / 2,
+                    xPos,
+                    yPos,
                     1,
                     wallHeight
                 );
-                
+                //-----Shading------/
                 //potential here for lighting effects
                 if (e.vertical) {
                     // draw color
                     ctx.fillStyle = "rgba(00,00,00,.42)";
-                    ctx.fillRect(e.sx, h / 2 - wallHeight / 2, 1, wallHeight);
+                    ctx.fillRect(e.sx, yPos, 1, wallHeight);
                 }
+
+
                 //fade to dark in distance
                 ctx.fillStyle = `rgba(00,00,00,${d / 70})`;
-                ctx.fillRect(e.sx, h / 2 - wallHeight / 2, 1, wallHeight);
+                ctx.fillRect(e.sx, yPos, 1, wallHeight);
+
+
+                //----draw floor?----//
+                let count = 0;
+
+                for (let row = yPos + wallHeight + 1; row <= h; row++) {
+                  
+                    const Beta = Math.abs(e.angle-player.angle);
+                    const r = row - player.z;
+                    const sld = (player.z*tileSize)/r;
+
+                    const dist = sld / Math.cos(Beta)
+
+                    let x = (player.x + Math.cos(e.angle) * dist)
+                    let y = (player.y + Math.sin(e.angle) * dist);
+                    
+                    const tx = Math.floor(x - Math.floor(x / tileSize) * tileSize);
+                    const ty = Math.floor(y - Math.floor(y / tileSize) * tileSize);
+
+                    
+                        ctx.drawImage(floorTexture,
+                            tx,
+                            ty,
+                            1,
+                            1,
+                            xPos,
+                            row ,
+                            1,
+                            1
+                        );
+                  
+                
+
+
+                    // ctx.fillStyle=`rgb(${i/1},${i/8},${i/8})`;
+                    // ctx.fillRect(xPos,i,1,1);
+                }
+
+
+
+
+
+
+
             }
 
         })
@@ -350,19 +440,19 @@ if (keysPressed.includes('s')) player.fov-=.01;
             })
         })
         //render rays
-        ctx.strokeStyle = 'yellow';
-        rays.forEach(ray => {
+        // ctx.strokeStyle = 'yellow';
+        // rays.forEach(ray => {
 
-            ctx.beginPath()
-            ctx.moveTo(player.x * scale + posX, player.y * scale + posY)
-            ctx.lineTo(
-                (player.x + Math.cos(ray.angle) * ray.distance) * scale,
-                (player.y + Math.sin(ray.angle) * ray.distance) * scale,
-            )
-            ctx.closePath();
-            ctx.stroke();
+        //     ctx.beginPath()
+        //     ctx.moveTo(player.x * scale + posX, player.y * scale + posY)
+        //     ctx.lineTo(
+        //         (player.x + Math.cos(ray.angle) * ray.distance) * scale,
+        //         (player.y + Math.sin(ray.angle) * ray.distance) * scale,
+        //     )
+        //     ctx.closePath();
+        //     ctx.stroke();
 
-        })
+        // })
         //render player
         ctx.fillStyle = 'green'
         ctx.fillRect(
