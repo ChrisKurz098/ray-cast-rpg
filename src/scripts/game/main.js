@@ -24,15 +24,16 @@ function main(canvas) {
     const w = canvas.width;
     const h = canvas.height
     const tileSize = 32;
+
     const mapSize = 20;
     //createMap(dimensions, maxTunnels, maxLength)
     const { map, initX, initY } = createMap(mapSize, 50, 15);
 
-    //createMap(mapSize, 50, 15);
+    
     let player = {
         x: (initX + 1) * tileSize + (tileSize / 2),
         y: (initY + 1) * tileSize + (tileSize / 2),
-        z: h / 2,
+        z: tileSize/2,
         angle: toRadians(Math.floor(Math.random() * 360)),
         fov: toRadians(65),
         spd: 0,
@@ -40,6 +41,8 @@ function main(canvas) {
         acc: .05,
         size: 5
     }
+   
+    player.projDist = (w / 2) / Math.tan(player.fov / 2);
     //each object hs {x,y,sprite}
     // x & y should be (0 to dimentions)* tileSize
     const { x: xx, y: yy } = randomCoord();
@@ -48,6 +51,7 @@ function main(canvas) {
     //-----GAME LOOP----//
     //------------------//
     setInterval(() => {
+       
         clearScreen();
         movePlayer();
         let zBuffer = getRays(w); //put all rays in z-buffer
@@ -132,7 +136,7 @@ function main(canvas) {
             if (objAngle > 3.14159)
                 objAngle -= 2.0 * 3.14159;
             //find the scale of the object just as we found it for the walls
-            const objScale = ((tileSize * 5) / objDist) * 277;
+            const objScale = ((tileSize * 5) / objDist) * player.projDist;
 
             obj.objAngle = objAngle;
             obj.objScale = objScale;
@@ -379,19 +383,20 @@ function main(canvas) {
 
 
                 //----draw floor?----//
-                let count = 0;
+                const Beta = Math.abs((e.angle-player.angle));
+                
+                for (let row = yPos + wallHeight ; row <= h; row++) {
+            
+                    const r = row - h/2;
+                    const sld = (player.z*player.projDist)/r;
 
-                for (let row = yPos + wallHeight + 1; row <= h; row++) {
-                  
-                    const Beta = Math.abs(e.angle-player.angle);
-                    const r = row - player.z;
-                    const sld = (player.z*tileSize)/r;
+                    const dist = sld / Math.cos(Beta);
 
-                    const dist = sld / Math.cos(Beta)
 
                     let x = (player.x + Math.cos(e.angle) * dist)
                     let y = (player.y + Math.sin(e.angle) * dist);
                     
+
                     const tx = Math.floor(x - Math.floor(x / tileSize) * tileSize);
                     const ty = Math.floor(y - Math.floor(y / tileSize) * tileSize);
 
@@ -402,23 +407,12 @@ function main(canvas) {
                             1,
                             1,
                             xPos,
-                            row ,
+                            row,
                             1,
                             1
                         );
                   
-                
-
-
-                    // ctx.fillStyle=`rgb(${i/1},${i/8},${i/8})`;
-                    // ctx.fillRect(xPos,i,1,1);
                 }
-
-
-
-
-
-
 
             }
 
