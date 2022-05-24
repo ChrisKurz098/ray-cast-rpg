@@ -41,6 +41,7 @@ function main(canvas) {
         acc: .05,
         size: 5
     }
+   //find distance from player to  projection plane
    
     player.projDist = (w / 2) / Math.tan(player.fov / 2);
     //each object hs {x,y,sprite}
@@ -336,7 +337,7 @@ function main(canvas) {
                 const wallIndex = e.wallIndex;
                 const distance = fixFishEye(e.distance, e.angle, player.angle);
                 const d = distance / 9;
-                const wallHeight = Math.floor(((tileSize * 5) / distance) * 277);
+                const wallHeight = Math.floor(((tileSize ) / distance) * player.projDist);
                 let textureOffset = (e.vertical) ? e.endY : e.endX;
                 textureOffset = Math.floor(textureOffset - Math.floor(textureOffset / tileSize) * tileSize);
                 //test if wall index number is 2
@@ -388,13 +389,13 @@ function main(canvas) {
                 for (let row = yPos + wallHeight ; row <= h; row++) {
             
                     const r = row - h/2;
-                    const sld = (player.z*player.projDist)/r;
+
+                    const sld = (player.z)/r*player.projDist;
 
                     const dist = sld / Math.cos(Beta);
 
-
                     let x = (player.x + Math.cos(e.angle) * dist)
-                    let y = (player.y + Math.sin(e.angle) * dist);
+                    let y = (player.y - Math.sin(e.angle) * dist);
                     
 
                     const tx = Math.floor(x - Math.floor(x / tileSize) * tileSize);
