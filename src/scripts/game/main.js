@@ -1,5 +1,5 @@
 import createMap from './generateMap';
-
+import myWorker from './floorCeil.worker.js';
 let keysPressed = [];
 
 const wallTextureA = new Image();
@@ -18,7 +18,11 @@ chestA.src = require('../../img/chestA.png');
 
 
 
+
+
 function main(canvas) {
+    const worker = new myWorker();
+
     const floorCanvas = document.createElement('canvas');
     floorCanvas.width = 32;
     floorCanvas.height = 32;
@@ -64,6 +68,9 @@ function main(canvas) {
     //-----GAME LOOP----//
     //------------------//
     setInterval(() => {
+        const strips = ctx.createImageData(w, h);
+        fctx.drawImage(floorTexture, 0, 0);
+        const tileData = fctx.getImageData(0, 0, 32, 32).data
 
         clearScreen();
         movePlayer();
@@ -71,8 +78,17 @@ function main(canvas) {
         getObjectsDistance(objects); //find the distance, angle and scale of each object
         zBuffer = [...zBuffer, ...objects]; //add objects to zBuffer
         zBuffer.sort((a, b) => (b.distance - a.distance)); //sort zBuffer to render farthest parts first
-        render(zBuffer); //render the zBuffer
-        renderMinimap(0, 0, .25, zBuffer); //position x, y, scale and rays
+
+        const buffer = JSON.parse(JSON.stringify(zBuffer));//cinvert array into something passable through postMessage
+        worker.postMessage({ player, buffer, strips, tileData, tileSize, h, w });
+
+        render(zBuffer); //render the zBuffered
+
+        worker.onmessage = function (e) {
+            renderMinimap(0, 0, .25, zBuffer); //position x, y, scale and rays
+            osctx.putImageData(e.data, 0, 0);
+            osctx.drawImage(osCanvas, 0, 0);
+        }
 
     }, 16.667)
 
@@ -325,9 +341,6 @@ function main(canvas) {
     }
 
     function render(zBuffer) {
-        const strips = ctx.createImageData(w, h);
-        fctx.drawImage(floorTexture, 0, 0);
-        const tileData = fctx.getImageData(0, 0, 32, 32).data
 
         zBuffer.forEach((e, i) => {
             //if the current element has a 'sprite' key, its an object
@@ -378,46 +391,12 @@ function main(canvas) {
                     ctx.fillRect(e.sx, yPos, 1, wallHeight);
                 }
 
-
                 //fade to dark in distance
                 ctx.fillStyle = `rgba(00,00,00,${d / 70})`;
                 ctx.fillRect(e.sx, yPos, 1, wallHeight);
-
-                //----draw floor?----//
-                const Beta = Math.abs((e.angle - player.angle));
-                const yRow = yPos + wallHeight;
-
-                for (let row = yRow; row <= h; row++) {
-                    const r = row - h / 2;
-                    const sld = (player.z) / r * player.projDist;
-                    const dist = sld / Math.cos(Beta);
-                    let x = (player.x + Math.cos(e.angle) * dist)
-                    let y = (player.y + Math.sin(e.angle) * dist);
-                    x = x & (tileSize - 1);
-                    y = y & (tileSize - 1);
-
-                    //get teature positions
-                    let inx = (((row) * w + xPos) * 4);
-                    const tnx = (((x) * 32 + y) * 4);
-                    //floor
-                    strips.data[inx] = tileData[tnx] ;
-                    strips.data[inx + 1] = tileData[tnx + 1] ;
-                    strips.data[inx + 2] = tileData[tnx + 2] ;
-                    strips.data[inx + 3] = 255;
-                    //ceilings
-                     inx = (((h-row) * w + xPos) * 4);
-                    strips.data[inx] = tileData[tnx] ;
-                    strips.data[inx + 1] = tileData[tnx + 1] ;
-                    strips.data[inx + 2] = tileData[tnx + 2] ;
-                    strips.data[inx + 3] = 255;
-                }
-
-
             }
 
         })
-        osctx.putImageData(strips, 0, 0);
-        osctx.drawImage(osCanvas, 0, 0);
     }
     //-------------Render Mini Map---------------------/
     function renderMinimap(posX = 0, posY = 0, scale = 1, rays) {
