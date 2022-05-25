@@ -19,21 +19,33 @@ chestA.src = require('../../img/chestA.png');
 
 
 function main(canvas) {
-    const ctx = canvas.getContext('2d');
-    ctx.imageSmoothingEnabled = false;
+    const floorCanvas = document.createElement('canvas');
+    floorCanvas.width = 32;
+    floorCanvas.height = 32;
+    const fctx = floorCanvas.getContext('2d');
+
+
+    const osctx = canvas.getContext('2d');
+    osctx.imageSmoothingEnabled = false;
     const w = canvas.width;
     const h = canvas.height
+
+    const osCanvas = document.createElement('canvas');
+    osCanvas.width = w;
+    osCanvas.height = h;
+    const ctx = osCanvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
     const tileSize = 32;
 
     const mapSize = 20;
     //createMap(dimensions, maxTunnels, maxLength)
     const { map, initX, initY } = createMap(mapSize, 50, 15);
 
-    
+
     let player = {
         x: (initX + 1) * tileSize + (tileSize / 2),
         y: (initY + 1) * tileSize + (tileSize / 2),
-        z: tileSize/2,
+        z: tileSize / 2,
         angle: toRadians(Math.floor(Math.random() * 360)),
         fov: toRadians(65),
         spd: 0,
@@ -41,8 +53,8 @@ function main(canvas) {
         acc: .05,
         size: 5
     }
-   //find distance from player to  projection plane
-   
+    //find distance from player to  projection plane
+
     player.projDist = (w / 2) / Math.tan(player.fov / 2);
     //each object hs {x,y,sprite}
     // x & y should be (0 to dimentions)* tileSize
@@ -52,7 +64,7 @@ function main(canvas) {
     //-----GAME LOOP----//
     //------------------//
     setInterval(() => {
-       
+
         clearScreen();
         movePlayer();
         let zBuffer = getRays(w); //put all rays in z-buffer
@@ -65,17 +77,7 @@ function main(canvas) {
     }, 16.667)
 
     function clearScreen() {
-        const grd = ctx.createLinearGradient(0, 0, 0, h / 2);;
-        grd.addColorStop(1, "black");
-        grd.addColorStop(0, "grey");
-        ctx.fillStyle = grd;
-        ctx.fillRect(0, 0, w, h / 2);
-        const grd2 = ctx.createLinearGradient(0, h / 2, 0, h);;
-        grd2.addColorStop(0, "black");
-        grd2.addColorStop(1, "grey");
-        ctx.fillStyle = grd2;
-        ctx.fillRect(0, h / 2, w, h);
-
+        ctx.clearRect(0, 0, w, h)
     }
     //-------------Move Player---------------------/
     function movePlayer() {
@@ -132,7 +134,7 @@ function main(canvas) {
             if (objAngle > 3.14159)
                 objAngle -= 2.0 * 3.14159;
             //find the scale of the object just as we found it for the walls
-            const objScale = ((tileSize * 5) / objDist) * player.projDist;
+            const objScale = ((tileSize) / objDist) * player.projDist;
 
             obj.objAngle = objAngle;
             obj.objScale = objScale;
@@ -323,6 +325,10 @@ function main(canvas) {
     }
 
     function render(zBuffer) {
+        const strips = ctx.createImageData(w, h);
+        fctx.drawImage(floorTexture, 0, 0);
+        const tileData = fctx.getImageData(0, 0, 32, 32).data
+
         zBuffer.forEach((e, i) => {
             //if the current element has a 'sprite' key, its an object
             if (e.sprite) {
@@ -332,7 +338,7 @@ function main(canvas) {
                 const wallIndex = e.wallIndex;
                 const distance = fixFishEye(e.distance, e.angle, player.angle);
                 const d = distance / 9;
-                const wallHeight = Math.floor((tileSize  / distance) * player.projDist);
+                const wallHeight = Math.floor((tileSize / distance) * player.projDist);
                 let textureOffset = (e.vertical) ? e.endY : e.endX;
                 textureOffset = Math.floor(textureOffset - Math.floor(textureOffset / tileSize) * tileSize);
                 //test if wall index number is 2
@@ -353,7 +359,7 @@ function main(canvas) {
                 const xPos = e.sx;
                 const yPos = Math.floor(h / 2 - wallHeight / 2);
 
-            
+
                 ctx.drawImage(texture,
                     textureOffset,
                     0,
@@ -377,51 +383,41 @@ function main(canvas) {
                 ctx.fillStyle = `rgba(00,00,00,${d / 70})`;
                 ctx.fillRect(e.sx, yPos, 1, wallHeight);
 
-
                 //----draw floor?----//
-                const Beta = Math.abs((e.angle-player.angle));
-                
-                for (let row = yPos + wallHeight ; row <= h; row++) {
-            
-                    const r = row - h/2;
+                const Beta = Math.abs((e.angle - player.angle));
+                const yRow = yPos + wallHeight;
 
-                    const sld = (player.z)/r*player.projDist;
-
+                for (let row = yRow; row <= h; row++) {
+                    const r = row - h / 2;
+                    const sld = (player.z) / r * player.projDist;
                     const dist = sld / Math.cos(Beta);
-
                     let x = (player.x + Math.cos(e.angle) * dist)
                     let y = (player.y + Math.sin(e.angle) * dist);
+                    x = x & (tileSize - 1);
+                    y = y & (tileSize - 1);
 
-                    //texWidth * floorTexY + floorTexX
-
+                    //get teature positions
+                    let inx = (((row) * w + xPos) * 4);
+                    const tnx = (((x) * 32 + y) * 4);
                     //floor
-                        ctx.drawImage(floorTexture,
-                            x&(tileSize-1),
-                            y&(tileSize-1),
-                            1,
-                            1,
-                            xPos,
-                            row,
-                            1,
-                            1
-                        );
-                        //ceiling
-                        ctx.drawImage(floorTexture,
-                            x&(tileSize-1),
-                            y&(tileSize-1),
-                            1,
-                            1,
-                            xPos,
-                            h-row,
-                            1,
-                            1
-                        );
-                  
+                    strips.data[inx] = tileData[tnx] ;
+                    strips.data[inx + 1] = tileData[tnx + 1] ;
+                    strips.data[inx + 2] = tileData[tnx + 2] ;
+                    strips.data[inx + 3] = 255;
+                    //ceilings
+                     inx = (((h-row) * w + xPos) * 4);
+                    strips.data[inx] = tileData[tnx] ;
+                    strips.data[inx + 1] = tileData[tnx + 1] ;
+                    strips.data[inx + 2] = tileData[tnx + 2] ;
+                    strips.data[inx + 3] = 255;
                 }
+
 
             }
 
         })
+        osctx.putImageData(strips, 0, 0);
+        osctx.drawImage(osCanvas, 0, 0);
     }
     //-------------Render Mini Map---------------------/
     function renderMinimap(posX = 0, posY = 0, scale = 1, rays) {
@@ -430,8 +426,8 @@ function main(canvas) {
         map.forEach((row, y) => {
             row.forEach((tile, x) => {
                 if (tile) {
-                    ctx.fillStyle = 'blue';
-                    ctx.fillRect(
+                    osctx.fillStyle = 'blue';
+                    osctx.fillRect(
                         posX + x * tileSizeMM,
                         posY + y * tileSizeMM,
                         tileSizeMM, tileSizeMM)
@@ -453,29 +449,29 @@ function main(canvas) {
 
         // })
         //render player
-        ctx.fillStyle = 'green'
-        ctx.fillRect(
+        osctx.fillStyle = 'green'
+        osctx.fillRect(
             posX + player.x * scale - player.size / 2,
             posY + player.y * scale - player.size / 2,
             player.size, player.size
         )
         //render player direction
         const rayLength = player.size * 20;
-        ctx.strokeStyle = 'red';
-        ctx.beginPath()
-        ctx.moveTo(player.x * scale + posX, player.y * scale + posY)
-        ctx.lineTo(
+        osctx.strokeStyle = 'red';
+        osctx.beginPath()
+        osctx.moveTo(player.x * scale + posX, player.y * scale + posY)
+        osctx.lineTo(
             (player.x + Math.cos(player.angle) * rayLength) * scale,
             (player.y + Math.sin(player.angle) * rayLength) * scale,
         )
-        ctx.closePath();
-        ctx.stroke();
+        osctx.closePath();
+        osctx.stroke();
 
         //render objects
         const objSize = 5;
         objects.forEach(obj => {
-            ctx.fillStyle = 'lightgreen'
-            ctx.fillRect(
+            osctx.fillStyle = 'lightgreen'
+            osctx.fillRect(
                 posX + (obj.x) * scale - objSize / 2,
                 posY + (obj.y) * scale - objSize / 2,
                 objSize, objSize
