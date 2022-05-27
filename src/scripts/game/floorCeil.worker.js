@@ -15,8 +15,6 @@ onmessage = function renderFloorCeil(e) {
             const xPos = e.sx;
             const yPos = Math.floor(h / 2 - wallHeight / 2);
 
-
-
             //----draw floor?----//
             const Beta = Math.abs((e.angle - player.angle));
             const yRow = yPos + wallHeight;
@@ -33,16 +31,18 @@ onmessage = function renderFloorCeil(e) {
                 //get teature positions
                 let inx = (((row) * w + xPos) * 4);
                 const tnx = (((x) * 32 + y) * 4);
+         
+                const shade = dist/4;
                 //floor
-                strips.data[inx] = tileData[tnx];
-                strips.data[inx + 1] = tileData[tnx + 1];
-                strips.data[inx + 2] = tileData[tnx + 2];
+                strips.data[inx] = tileData[tnx]-shade;
+                strips.data[inx + 1] = tileData[tnx + 1]-shade;
+                strips.data[inx + 2] = tileData[tnx + 2]-shade;
                 strips.data[inx + 3] = 255;
                 //ceilings
                 inx = (((h - row) * w + xPos) * 4);
-                strips.data[inx] = tileData[tnx];
-                strips.data[inx + 1] = tileData[tnx + 1];
-                strips.data[inx + 2] = tileData[tnx + 2];
+                strips.data[inx] = tileData[tnx]-shade;
+                strips.data[inx + 1] = tileData[tnx + 1]-shade;
+                strips.data[inx + 2] = tileData[tnx + 2]-shade;
                 strips.data[inx + 3] = 255;
             }
 

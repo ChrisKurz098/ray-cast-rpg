@@ -1,5 +1,5 @@
 import createMap from './generateMap';
-import myWorker from './floorCeil.worker.js';
+import floorWorker from './floorCeil.worker.js';
 let keysPressed = [];
 
 const wallTextureA = new Image();
@@ -21,7 +21,7 @@ chestA.src = require('../../img/chestA.png');
 
 
 function main(canvas) {
-    const worker = new myWorker();
+    const workerA = new floorWorker();
 
     const floorCanvas = document.createElement('canvas');
     floorCanvas.width = 32;
@@ -64,34 +64,50 @@ function main(canvas) {
     // x & y should be (0 to dimentions)* tileSize
     const { x: xx, y: yy } = randomCoord();
     const objects = [{ x: xx, y: yy, z: 1, sprite: chestA }];
+
+    var startTime = Date.now();
+
+    let frame = 0;
+
+    const strips = ctx.createImageData(w, h);
+    fctx.drawImage(floorTexture, 0, 0);
+    const tileData = fctx.getImageData(0, 0, 32, 32).data
     //------------------//
     //-----GAME LOOP----//
     //------------------//
-    setInterval(() => {
-        const strips = ctx.createImageData(w, h);
-        fctx.drawImage(floorTexture, 0, 0);
-        const tileData = fctx.getImageData(0, 0, 32, 32).data
+    function loop() {
+            window.requestAnimationFrame(() => {
+            let time = Date.now();
+            frame++;
+            if (time - startTime > 1000) {
+                console.clear();
+                console.log('FPS:', (frame / ((time - startTime) / 1000)).toFixed(1));
+                startTime = time;
+                frame = 0;
+            }
 
-        clearScreen();
-        movePlayer();
-        let zBuffer = getRays(w); //put all rays in z-buffer
-        getObjectsDistance(objects); //find the distance, angle and scale of each object
-        zBuffer = [...zBuffer, ...objects]; //add objects to zBuffer
-        zBuffer.sort((a, b) => (b.distance - a.distance)); //sort zBuffer to render farthest parts first
+            clearScreen();
+            movePlayer();
+            let zBuffer = getRays(w); //put all rays in z-buffer
+            getObjectsDistance(objects); //find the distance, angle and scale of each object
+            zBuffer = [...zBuffer, ...objects]; //add objects to zBuffer
+            zBuffer.sort((a, b) => (b.distance - a.distance)); //sort zBuffer to render farthest parts first
 
-        const buffer = JSON.parse(JSON.stringify(zBuffer));//cinvert array into something passable through postMessage
-        worker.postMessage({ player, buffer, strips, tileData, tileSize, h, w });
-
-        render(zBuffer); //render the zBuffered
-
-        worker.onmessage = function (e) {
-            renderMinimap(0, 0, .25, zBuffer); //position x, y, scale and rays
-            osctx.putImageData(e.data, 0, 0);
-            osctx.drawImage(osCanvas, 0, 0);
-        }
-
-    }, 16.667)
-
+            const buffer = JSON.parse(JSON.stringify(zBuffer));//cinvert array into something passable through postMessage
+            workerA.postMessage({ player, buffer, strips, tileData, tileSize, h, w });
+            render(zBuffer); //render the zBuffered
+            workerA.onmessage = function (e) {
+                osctx.putImageData(e.data, 0, 0);
+                osctx.drawImage(osCanvas, 0, 0);
+                renderMinimap(0, 0, .25, zBuffer); //position x, y, scale and rays
+                loop();
+            }
+        });
+      
+    }
+    //----inital call for loop----//
+    loop();
+    //---FUNCTIONS---//
     function clearScreen() {
         ctx.clearRect(0, 0, w, h)
     }
