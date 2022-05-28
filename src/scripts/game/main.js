@@ -76,15 +76,17 @@ function main(canvas) {
     //-----GAME LOOP----//
     //------------------//
     function loop() {
+        let time = Date.now();
+        frame++;
+        if (time - startTime > 1000) {
+            console.clear();
+            console.log('FPS:', (frame / ((time - startTime) / 1000)).toFixed(1));
+            startTime = time;
+            frame = 0;
+        }
+        
             window.requestAnimationFrame(() => {
-            let time = Date.now();
-            frame++;
-            if (time - startTime > 1000) {
-                console.clear();
-                console.log('FPS:', (frame / ((time - startTime) / 1000)).toFixed(1));
-                startTime = time;
-                frame = 0;
-            }
+           
 
             clearScreen();
             movePlayer();
@@ -96,6 +98,7 @@ function main(canvas) {
             const buffer = JSON.parse(JSON.stringify(zBuffer));//cinvert array into something passable through postMessage
             workerA.postMessage({ player, buffer, strips, tileData, tileSize, h, w });
             render(zBuffer); //render the zBuffered
+               
             workerA.onmessage = function (e) {
                 osctx.putImageData(e.data, 0, 0);
                 osctx.drawImage(osCanvas, 0, 0);

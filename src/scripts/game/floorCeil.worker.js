@@ -32,7 +32,7 @@ onmessage = function renderFloorCeil(e) {
                 let inx = (((row) * w + xPos) * 4);
                 const tnx = (((x) * 32 + y) * 4);
          
-                const shade = dist/4;
+                const shade = dist/3 ;
                 //floor
                 strips.data[inx] = tileData[tnx]-shade;
                 strips.data[inx + 1] = tileData[tnx + 1]-shade;
@@ -45,15 +45,10 @@ onmessage = function renderFloorCeil(e) {
                 strips.data[inx + 2] = tileData[tnx + 2]-shade;
                 strips.data[inx + 3] = 255;
             }
-
-
         }
 
     })
-
     postMessage(strips);
-
-
 }
 
 
