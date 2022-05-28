@@ -1,0 +1,16 @@
+{
+  "files": {
+    "main.css": "/static/css/main.4dd1a06d.css",
+    "main.js": "/static/js/main.5ad5aa76.js",
+    "static/js/787.81e48b36.chunk.js": "/static/js/787.81e48b36.chunk.js",
+    "static/js/floorCeil.worker.fc10e9d1.worker.js": "/static/js/floorCeil.worker.fc10e9d1.worker.js",
+    "index.html": "/index.html",
+    "main.4dd1a06d.css.map": "/static/css/main.4dd1a06d.css.map",
+    "main.5ad5aa76.js.map": "/static/js/main.5ad5aa76.js.map",
+    "787.81e48b36.chunk.js.map": "/static/js/787.81e48b36.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.4dd1a06d.css",
+    "static/js/main.5ad5aa76.js"
+  ]
+}
