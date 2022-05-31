@@ -12,6 +12,8 @@ const wallTextureD = new Image();
 wallTextureD.src = require('../../img/wallD.png');
 const floorTexture = new Image();
 floorTexture.src = require('../../img/floor.png');
+const ceilTexture = new Image();
+ceilTexture.src = require('../../img/ceil.png');
 
 const chestA = new Image();
 chestA.src = require('../../img/chestA.png');
@@ -32,7 +34,7 @@ function main(canvas) {
     const osctx = canvas.getContext('2d');
     osctx.imageSmoothingEnabled = false;
     const w = canvas.width;
-    const h = canvas.height
+    const h = canvas.height;
 
     const osCanvas = document.createElement('canvas');
     osCanvas.width = w;
@@ -72,6 +74,9 @@ function main(canvas) {
     const strips = ctx.createImageData(w, h);
     fctx.drawImage(floorTexture, 0, 0);
     const tileData = fctx.getImageData(0, 0, 32, 32).data
+    fctx.drawImage(ceilTexture, 0, 0);
+    const tileData2 = fctx.getImageData(0, 0, 32, 32).data
+    
     //------------------//
     //-----GAME LOOP----//
     //------------------//
@@ -85,9 +90,7 @@ function main(canvas) {
             frame = 0;
         }
         
-            window.requestAnimationFrame(() => {
-           
-
+            
             clearScreen();
             movePlayer();
             let zBuffer = getRays(w); //put all rays in z-buffer
@@ -96,16 +99,18 @@ function main(canvas) {
             zBuffer.sort((a, b) => (b.distance - a.distance)); //sort zBuffer to render farthest parts first
 
             const buffer = JSON.parse(JSON.stringify(zBuffer));//cinvert array into something passable through postMessage
-            workerA.postMessage({ player, buffer, strips, tileData, tileSize, h, w });
+            workerA.postMessage({ player, buffer, strips, tileData,tileData2, tileSize, h, w });
             render(zBuffer); //render the zBuffered
                
             workerA.onmessage = function (e) {
+                window.requestAnimationFrame(() => {
                 osctx.putImageData(e.data, 0, 0);
                 osctx.drawImage(osCanvas, 0, 0);
-                renderMinimap(0, 0, .25, zBuffer); //position x, y, scale and rays
-                loop();
+                //renderMinimap(0, 0, .25, zBuffer); //position x, y, scale and rays
+                loop()
+            });
             }
-        });
+           
       
     }
     //----inital call for loop----//
@@ -362,6 +367,7 @@ function main(canvas) {
     function render(zBuffer) {
 
         zBuffer.forEach((e, i) => {
+           
             //if the current element has a 'sprite' key, its an object
             if (e.sprite) {
                 renderObject(e); //render the object
@@ -391,7 +397,6 @@ function main(canvas) {
                 const xPos = e.sx;
                 const yPos = Math.floor(h / 2 - wallHeight / 2);
 
-
                 ctx.drawImage(texture,
                     textureOffset,
                     0,
@@ -411,10 +416,10 @@ function main(canvas) {
                 }
 
                 //fade to dark in distance
-                ctx.fillStyle = `rgba(00,00,00,${d / 70})`;
+                ctx.fillStyle = `rgba(00,00,00,${(d / 70)})`;
                 ctx.fillRect(e.sx, yPos, 1, wallHeight);
             }
-
+            
         })
     }
     //-------------Render Mini Map---------------------/

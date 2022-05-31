@@ -10,7 +10,7 @@ function GameWindow() {
 
     
     return (
-        <canvas id="canvas" width="1280" height="720"></canvas>
+        <canvas id="canvas" width="640" height="360"></canvas>
     )
 }
 

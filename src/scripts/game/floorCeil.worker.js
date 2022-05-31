@@ -2,7 +2,7 @@
 
 onmessage = function renderFloorCeil(e) {
 
-    let {player, buffer, strips, tileData, tileSize,  h, w } = e.data;
+    let {player, buffer, strips, tileData,tileData2, tileSize,  h, w } = e.data;
 
     buffer.forEach((e) => {
         //if the current element has a 'sprite' key, its an object
@@ -32,7 +32,7 @@ onmessage = function renderFloorCeil(e) {
                 let inx = (((row) * w + xPos) * 4);
                 const tnx = (((x) * 32 + y) * 4);
          
-                const shade = dist/3 ;
+                const shade = dist/4 ;
                 //floor
                 strips.data[inx] = tileData[tnx]-shade;
                 strips.data[inx + 1] = tileData[tnx + 1]-shade;
@@ -40,9 +40,9 @@ onmessage = function renderFloorCeil(e) {
                 strips.data[inx + 3] = 255;
                 //ceilings
                 inx = (((h - row) * w + xPos) * 4);
-                strips.data[inx] = tileData[tnx]-shade;
-                strips.data[inx + 1] = tileData[tnx + 1]-shade;
-                strips.data[inx + 2] = tileData[tnx + 2]-shade;
+                strips.data[inx] = tileData2[tnx]-shade+25;
+                strips.data[inx + 1] = tileData2[tnx + 1]-shade+25;
+                strips.data[inx + 2] = tileData2[tnx + 2]-shade+25;
                 strips.data[inx + 3] = 255;
             }
         }

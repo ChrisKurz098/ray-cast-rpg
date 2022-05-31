@@ -9,8 +9,8 @@ body{
 
 #canvas {
   image-rendering: pixelated;
-  transform-origin: top center;
-  transform: scale(1);
+  transform-origin: top left;
+  transform: scale(3);
 }
 
 
