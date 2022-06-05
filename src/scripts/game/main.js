@@ -99,17 +99,17 @@ function main(canvas) {
             zBuffer.sort((a, b) => (b.distance - a.distance)); //sort zBuffer to render farthest parts first
 
             const buffer = JSON.parse(JSON.stringify(zBuffer));//cinvert array into something passable through postMessage
-            workerA.postMessage({ player, buffer, strips, tileData,tileData2, tileSize, h, w });
+            //workerA.postMessage({ player, buffer, strips, tileData,tileData2, tileSize, h, w });
             render(zBuffer); //render the zBuffered
                
-            workerA.onmessage = function (e) {
-                window.requestAnimationFrame(() => {
-                osctx.putImageData(e.data, 0, 0);
-                osctx.drawImage(osCanvas, 0, 0);
-                //renderMinimap(0, 0, .25, zBuffer); //position x, y, scale and rays
-                loop()
-            });
-            }
+            // workerA.onmessage = function (e) {
+            //     window.requestAnimationFrame(() => {
+            //     osctx.putImageData(e.data, 0, 0);
+            //     osctx.drawImage(osCanvas, 0, 0);
+            //     //renderMinimap(0, 0, .25, zBuffer); //position x, y, scale and rays
+            //     loop()
+            // });
+            // }
            
       
     }
@@ -367,7 +367,9 @@ function main(canvas) {
     function render(zBuffer) {
 
         zBuffer.forEach((e, i) => {
-           
+        
+
+
             //if the current element has a 'sprite' key, its an object
             if (e.sprite) {
                 renderObject(e); //render the object
@@ -397,6 +399,38 @@ function main(canvas) {
                 const xPos = e.sx;
                 const yPos = Math.floor(h / 2 - wallHeight / 2);
 
+                             //----draw floor?----//
+                             const Beta = Math.abs((e.angle - player.angle));
+                             const yRow = yPos + wallHeight;
+                 
+                             for (let row = yRow; row <= h; row++) {
+                                 const r = row - h / 2;
+                                 const sld = (player.z) / r * player.projDist;
+                                 const dist = sld / Math.cos(Beta);
+                                 let x = (player.x + Math.cos(e.angle) * dist)
+                                 let y = (player.y + Math.sin(e.angle) * dist);
+                                 x = x & (tileSize - 1);
+                                 y = y & (tileSize - 1);
+                 
+                                 //get teature positions
+                                 let inx = (((row) * w + xPos) * 4);
+                                 const tnx = (((x) * 32 + y) * 4);
+                          
+                                 const shade = dist/4 ;
+                                 //floor
+                                 strips.data[inx] = tileData[tnx]-shade;
+                                 strips.data[inx + 1] = tileData[tnx + 1]-shade;
+                                 strips.data[inx + 2] = tileData[tnx + 2]-shade;
+                                 strips.data[inx + 3] = 255;
+                                 //ceilings
+                                 inx = (((h - row) * w + xPos) * 4);
+                                 strips.data[inx] = tileData2[tnx]-shade+25;
+                                 strips.data[inx + 1] = tileData2[tnx + 1]-shade+25;
+                                 strips.data[inx + 2] = tileData2[tnx + 2]-shade+25;
+                                 strips.data[inx + 3] = 255;
+                             }
+
+                //---DRAW WALLS---//
                 ctx.drawImage(texture,
                     textureOffset,
                     0,
@@ -421,6 +455,12 @@ function main(canvas) {
             }
             
         })
+        window.requestAnimationFrame(() => {
+            osctx.putImageData(strips, 0, 0);
+            osctx.drawImage(osCanvas, 0, 0);
+            //renderMinimap(0, 0, .25, zBuffer); //position x, y, scale and rays
+            loop()
+        });
     }
     //-------------Render Mini Map---------------------/
     function renderMinimap(posX = 0, posY = 0, scale = 1, rays) {
