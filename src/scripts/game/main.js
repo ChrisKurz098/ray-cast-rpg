@@ -22,23 +22,32 @@ chestA.src = require('../../img/chestA.png');
 
 
 
-function main(canvas) {
+function main() {
     const workerA = new floorWorker();
+    const canvasA = document.getElementById('canvasA');
+    const canvasB = document.getElementById('canvasB');
+
+
+
+
+    const osctx = canvasA.getContext('2d');
+    osctx.imageSmoothingEnabled = false;
+    const w = canvasA.width;
+    const h = canvasA.height;
+
+    const osctxB = canvasB.getContext('2d');
+    osctxB.imageSmoothingEnabled = false;
+
 
     const floorCanvas = document.createElement('canvas');
     floorCanvas.width = 32;
     floorCanvas.height = 32;
     const fctx = floorCanvas.getContext('2d');
 
-
-    const osctx = canvas.getContext('2d');
-    osctx.imageSmoothingEnabled = false;
-    const w = canvas.width;
-    const h = canvas.height;
-
     const osCanvas = document.createElement('canvas');
     osCanvas.width = w;
     osCanvas.height = h;
+    
     const ctx = osCanvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
     const tileSize = 32;
@@ -91,7 +100,7 @@ function main(canvas) {
         }
         
             
-            clearScreen();
+        ctx.clearRect(0, 0, w, h);
             movePlayer();
             let zBuffer = getRays(w); //put all rays in z-buffer
             getObjectsDistance(objects); //find the distance, angle and scale of each object
@@ -103,9 +112,13 @@ function main(canvas) {
             render(zBuffer); //render the zBuffered
                
             workerA.onmessage = function (e) {
+        
                 window.requestAnimationFrame(() => {
                 osctx.putImageData(e.data, 0, 0);
-                osctx.drawImage(osCanvas, 0, 0);
+                
+                osctxB.clearRect(0, 0, w, h)
+                //osctxB.putImageData(strips, 0, 0);
+                osctxB.drawImage(osCanvas, 0, 0);
                 //renderMinimap(0, 0, .25, zBuffer); //position x, y, scale and rays
                 loop()
             });
@@ -116,9 +129,7 @@ function main(canvas) {
     //----inital call for loop----//
     loop();
     //---FUNCTIONS---//
-    function clearScreen() {
-        ctx.clearRect(0, 0, w, h)
-    }
+
     //-------------Move Player---------------------/
     function movePlayer() {
         const { x, y } = player;

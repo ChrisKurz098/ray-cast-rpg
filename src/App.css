@@ -6,12 +6,18 @@ body{
 
 }
 
-
-#canvas {
+#canavsContainer{
+  position: absolute;
+}
+#canvasA, #canvasB {
+  position: absolute;
+  top: 0px;
+  left: 0px;
   image-rendering: pixelated;
   transform-origin: top left;
   transform: scale(3);
 }
+
 
 
 

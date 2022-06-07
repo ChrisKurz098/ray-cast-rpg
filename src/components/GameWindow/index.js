@@ -4,13 +4,16 @@ import main from "../../scripts/game/main";
 function GameWindow() {
 
     useEffect(() => {
-        const canvas = document.getElementById('canvas');
-        main(canvas);
+     
+        main();
     }, [])
 
     
     return (
-        <canvas id="canvas" width="640" height="360"></canvas>
+        <div id="canavsContainer">
+        <canvas id="canvasA" width="640" height="360"></canvas>
+        <canvas id="canvasB" width="640" height="360"></canvas>
+        </div>
     )
 }
 
