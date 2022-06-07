@@ -86,6 +86,7 @@ function main() {
     fctx.drawImage(ceilTexture, 0, 0);
     const tileData2 = fctx.getImageData(0, 0, 32, 32).data
     
+    let wallData = strips;
     //------------------//
     //-----GAME LOOP----//
     //------------------//
@@ -99,7 +100,7 @@ function main() {
             frame = 0;
         }
         
-            
+        wallData = strips;
         ctx.clearRect(0, 0, w, h);
             movePlayer();
             let zBuffer = getRays(w); //put all rays in z-buffer
@@ -114,11 +115,11 @@ function main() {
             workerA.onmessage = function (e) {
         
                 window.requestAnimationFrame(() => {
+
                 osctx.putImageData(e.data, 0, 0);
-                
-                osctxB.clearRect(0, 0, w, h)
+
                 //osctxB.putImageData(strips, 0, 0);
-                osctxB.drawImage(osCanvas, 0, 0);
+                //osctxB.drawImage(osCanvas, 0, 0);
                 //renderMinimap(0, 0, .25, zBuffer); //position x, y, scale and rays
                 loop()
             });
@@ -386,10 +387,12 @@ function main() {
                 //if not an object render the slice of wall
                 const wallIndex = e.wallIndex;
                 const distance = fixFishEye(e.distance, e.angle, player.angle);
-                const d = distance / 9;
+                let d = distance / 9;
                 const wallHeight = Math.floor((tileSize / distance) * player.projDist);
-                let textureOffset = (e.vertical) ? e.endY : e.endX;
-                textureOffset = Math.floor(textureOffset - Math.floor(textureOffset / tileSize) * tileSize);
+                let textureOffsetX = (e.vertical) ? e.endY : e.endX;
+                 textureOffsetX = Math.floor(textureOffsetX - Math.floor(textureOffsetX / tileSize) * tileSize);
+                 let Y = (e.vertical) ? e.endX : e.endY;
+                 let textureOffsetY = Math.floor(Y - Math.floor(Y / tileSize) * tileSize);
                 //test if wall index number is 2
                 let texture;
                 switch (true) {
@@ -407,28 +410,39 @@ function main() {
 
                 const xPos = e.sx;
                 const yPos = Math.floor(h / 2 - wallHeight / 2);
-
-                ctx.drawImage(texture,
-                    textureOffset,
-                    0,
-                    1,
-                    tileSize,
-                    xPos,
-                    yPos,
-                    1,
-                    wallHeight
-                );
-                //-----Shading------/
-                //potential here for lighting effects
-                if (e.vertical) {
-                    // draw color
-                    ctx.fillStyle = "rgba(00,00,00,.42)";
-                    ctx.fillRect(e.sx, yPos, 1, wallHeight);
+                if (Y === e.endY) d +=14;
+                for (let i = 0; i < wallHeight; i++) {
+                    textureOffsetY = Math.round(i/wallHeight*tileSize-1);
+                 
+                    let inx = (((yPos+i) * w + xPos) * 4);
+                    const tnx = (((textureOffsetX) * 32 + (textureOffsetY)) * 4);
+                    wallData.data[inx] = tileData[tnx]-d;
+                    wallData.data[inx + 1] = tileData[tnx + 1]-d;
+                    wallData.data[inx + 2] = tileData[tnx + 2]-d;
+                    wallData.data[inx + 3] = 255;
+                    
                 }
+                // ctx.drawImage(texture,
+                //     textureOffset,
+                //     0,
+                //     1,
+                //     tileSize,
+                //     xPos,
+                //     yPos,
+                //     1,
+                //     wallHeight
+                // );
+                // //-----Shading------/
+                // //potential here for lighting effects
+                // if (e.vertical) {
+                //     // draw color
+                //     ctx.fillStyle = "rgba(00,00,00,.42)";
+                //     ctx.fillRect(e.sx, yPos, 1, wallHeight);
+                // }
 
-                //fade to dark in distance
-                ctx.fillStyle = `rgba(00,00,00,${(d / 70)})`;
-                ctx.fillRect(e.sx, yPos, 1, wallHeight);
+                // //fade to dark in distance
+                // ctx.fillStyle = `rgba(00,00,00,${(d / 70)})`;
+                // ctx.fillRect(e.sx, yPos, 1, wallHeight);
             }
             
         })
