@@ -392,7 +392,7 @@ function main() {
                 let textureOffsetX = (e.vertical) ? e.endY : e.endX;
                  textureOffsetX = Math.floor(textureOffsetX - Math.floor(textureOffsetX / tileSize) * tileSize);
                  let Y = (e.vertical) ? e.endX : e.endY;
-                 let textureOffsetY = Math.floor(Y - Math.floor(Y / tileSize) * tileSize);
+                 let textureOffsetY = 1;
                 //test if wall index number is 2
                 let texture;
                 switch (true) {
@@ -411,6 +411,7 @@ function main() {
                 const xPos = e.sx;
                 const yPos = Math.floor(h / 2 - wallHeight / 2);
                 if (Y === e.endY) d +=14;
+
                 for (let i = 0; i < wallHeight; i++) {
                     textureOffsetY = Math.round(i/wallHeight*tileSize-1);
                  
@@ -420,29 +421,8 @@ function main() {
                     wallData.data[inx + 1] = tileData[tnx + 1]-d;
                     wallData.data[inx + 2] = tileData[tnx + 2]-d;
                     wallData.data[inx + 3] = 255;
-                    
                 }
-                // ctx.drawImage(texture,
-                //     textureOffset,
-                //     0,
-                //     1,
-                //     tileSize,
-                //     xPos,
-                //     yPos,
-                //     1,
-                //     wallHeight
-                // );
-                // //-----Shading------/
-                // //potential here for lighting effects
-                // if (e.vertical) {
-                //     // draw color
-                //     ctx.fillStyle = "rgba(00,00,00,.42)";
-                //     ctx.fillRect(e.sx, yPos, 1, wallHeight);
-                // }
-
-                // //fade to dark in distance
-                // ctx.fillStyle = `rgba(00,00,00,${(d / 70)})`;
-                // ctx.fillRect(e.sx, yPos, 1, wallHeight);
+                
             }
             
         })
