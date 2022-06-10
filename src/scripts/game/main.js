@@ -76,7 +76,10 @@ function main(canvas) {
     const tileData = fctx.getImageData(0, 0, 32, 32).data
     fctx.drawImage(ceilTexture, 0, 0);
     const tileData2 = fctx.getImageData(0, 0, 32, 32).data
-    
+
+    let screenScale = window.innerWidth / w;
+    let screenSize = 0;
+
     //------------------//
     //-----GAME LOOP----//
     //------------------//
@@ -89,29 +92,34 @@ function main(canvas) {
             startTime = time;
             frame = 0;
         }
-        
-            
-            clearScreen();
-            movePlayer();
-            let zBuffer = getRays(w); //put all rays in z-buffer
-            getObjectsDistance(objects); //find the distance, angle and scale of each object
-            zBuffer = [...zBuffer, ...objects]; //add objects to zBuffer
-            zBuffer.sort((a, b) => (b.distance - a.distance)); //sort zBuffer to render farthest parts first
 
-            const buffer = JSON.parse(JSON.stringify(zBuffer));//cinvert array into something passable through postMessage
-            workerA.postMessage({ player, buffer, strips, tileData,tileData2, tileSize, h, w });
-            render(zBuffer); //render the zBuffered
-               
-            workerA.onmessage = function (e) {
-                window.requestAnimationFrame(() => {
+        if (screenSize !== window.innerWidth) {
+            screenScale = window.innerWidth / w;
+            screenSize = w * screenScale;
+            canvas.style.transform = `scale(${screenScale})`;
+        }
+
+        clearScreen();
+        movePlayer();
+        let zBuffer = getRays(w); //put all rays in z-buffer
+        getObjectsDistance(objects); //find the distance, angle and scale of each object
+        zBuffer = [...zBuffer, ...objects]; //add objects to zBuffer
+        zBuffer.sort((a, b) => (b.distance - a.distance)); //sort zBuffer to render farthest parts first
+
+        const buffer = JSON.parse(JSON.stringify(zBuffer));//cinvert array into something passable through postMessage
+        workerA.postMessage({ player, buffer, strips, tileData, tileData2, tileSize, h, w });
+        render(zBuffer); //render the zBuffered
+
+        workerA.onmessage = function (e) {
+            window.requestAnimationFrame(() => {
                 osctx.putImageData(e.data, 0, 0);
                 osctx.drawImage(osCanvas, 0, 0);
                 //renderMinimap(0, 0, .25, zBuffer); //position x, y, scale and rays
                 loop()
             });
-            }
-           
-      
+        }
+
+
     }
     //----inital call for loop----//
     loop();
@@ -367,7 +375,7 @@ function main(canvas) {
     function render(zBuffer) {
 
         zBuffer.forEach((e, i) => {
-           
+
             //if the current element has a 'sprite' key, its an object
             if (e.sprite) {
                 renderObject(e); //render the object
@@ -419,7 +427,7 @@ function main(canvas) {
                 ctx.fillStyle = `rgba(00,00,00,${(d / 70)})`;
                 ctx.fillRect(e.sx, yPos, 1, wallHeight);
             }
-            
+
         })
     }
     //-------------Render Mini Map---------------------/
