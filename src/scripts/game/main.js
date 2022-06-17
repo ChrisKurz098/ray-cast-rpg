@@ -403,7 +403,8 @@ function main(canvas) {
                              const Beta = Math.abs((e.angle - player.angle));
                              const yRow = yPos + wallHeight;
                  
-                             for (let row = yRow; row <= h; row++) {
+                             for (let row = 0; row <= h; row++) {
+                                if (row>=yRow){
                                  const r = row - h / 2;
                                  const sld = (player.z) / r * player.projDist;
                                  const dist = sld / Math.cos(Beta);
@@ -428,30 +429,31 @@ function main(canvas) {
                                  strips.data[inx + 1] = tileData2[tnx + 1]-shade+25;
                                  strips.data[inx + 2] = tileData2[tnx + 2]-shade+25;
                                  strips.data[inx + 3] = 255;
+                                }
                              }
 
-                //---DRAW WALLS---//
-                ctx.drawImage(texture,
-                    textureOffset,
-                    0,
-                    1,
-                    tileSize,
-                    xPos,
-                    yPos,
-                    1,
-                    wallHeight
-                );
-                //-----Shading------/
-                //potential here for lighting effects
-                if (e.vertical) {
-                    // draw color
-                    ctx.fillStyle = "rgba(00,00,00,.42)";
-                    ctx.fillRect(e.sx, yPos, 1, wallHeight);
-                }
+                // //---DRAW WALLS---//
+                // ctx.drawImage(texture,
+                //     textureOffset,
+                //     0,
+                //     1,
+                //     tileSize,
+                //     xPos,
+                //     yPos,
+                //     1,
+                //     wallHeight
+                // );
+                // //-----Shading------/
+                // //potential here for lighting effects
+                // if (e.vertical) {
+                //     // draw color
+                //     ctx.fillStyle = "rgba(00,00,00,.42)";
+                //     ctx.fillRect(e.sx, yPos, 1, wallHeight);
+                // }
 
-                //fade to dark in distance
-                ctx.fillStyle = `rgba(00,00,00,${(d / 70)})`;
-                ctx.fillRect(e.sx, yPos, 1, wallHeight);
+                // //fade to dark in distance
+                // ctx.fillStyle = `rgba(00,00,00,${(d / 70)})`;
+                // ctx.fillRect(e.sx, yPos, 1, wallHeight);
             }
             
         })
