@@ -379,8 +379,10 @@ function main(canvas) {
                 const distance = fixFishEye(e.distance, e.angle, player.angle);
                 const d = distance / 9;
                 const wallHeight = Math.floor((tileSize / distance) * player.projDist);
-                let textureOffset = (e.vertical) ? e.endY : e.endX;
-                textureOffset = Math.floor(textureOffset - Math.floor(textureOffset / tileSize) * tileSize);
+                let textureOffsetX = (e.vertical) ? e.endY : e.endX;
+                textureOffsetX = Math.floor(textureOffsetX - Math.floor(textureOffsetX / tileSize) * tileSize);
+                let textureOffsetY = (e.vertical) ? e.endX : e.endY;
+                //textureOffsetY = Math.floor(textureOffsetY - Math.floor(textureOffsetY / tileSize) * tileSize);
                 //test if wall index number is 2
                 let texture;
                 switch (true) {
@@ -403,7 +405,7 @@ function main(canvas) {
                              const Beta = Math.abs((e.angle - player.angle));
                              const yRow = yPos + wallHeight;
                  
-                             for (let row = 0; row <= h; row++) {
+                             for (let row = yPos; row <= h; row++) {
                                 if (row>=yRow){
                                  const r = row - h / 2;
                                  const sld = (player.z) / r * player.projDist;
@@ -429,6 +431,19 @@ function main(canvas) {
                                  strips.data[inx + 1] = tileData2[tnx + 1]-shade+25;
                                  strips.data[inx + 2] = tileData2[tnx + 2]-shade+25;
                                  strips.data[inx + 3] = 255;
+                                } else {
+                                    //drawWall
+                                    textureOffsetY = (textureOffsetY);
+                                    textureOffsetY =Math.floor(textureOffsetY - Math.floor(textureOffsetY / tileSize) * tileSize);
+                                    let inx = (((row) * w + xPos) * 4);
+                                    const tnx = (((textureOffsetX) * 32 + textureOffsetY) * 4);
+                                    const shade = d;
+                                    //walls
+                                    strips.data[inx] = tileData[tnx]-shade;
+                                    strips.data[inx + 1] = tileData[tnx + 1]-shade;
+                                    strips.data[inx + 2] = tileData[tnx + 2]-shade;
+                                    strips.data[inx + 3] = 255;
+                             
                                 }
                              }
 
@@ -459,7 +474,7 @@ function main(canvas) {
         })
         window.requestAnimationFrame(() => {
             osctx.putImageData(strips, 0, 0);
-            osctx.drawImage(osCanvas, 0, 0);
+            //osctx.drawImage(osCanvas, 0, 0);
             //renderMinimap(0, 0, .25, zBuffer); //position x, y, scale and rays
             loop()
         });
