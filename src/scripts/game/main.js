@@ -112,9 +112,9 @@ function main(canvas) {
 
         workerA.onmessage = function (e) {
             window.requestAnimationFrame(() => {
-                osctx.putImageData(e.data, 0, 0);
-                osctx.drawImage(osCanvas, 0, 0);
-                //renderMinimap(0, 0, .25, zBuffer); //position x, y, scale and rays
+                osctx.putImageData(e.data, 0, 1);
+                osctx.drawImage(osCanvas, 0, 1);
+                renderMinimap(0, 0, .25, zBuffer); //position x, y, scale and rays
                 loop()
             });
         }
