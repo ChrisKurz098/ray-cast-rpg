@@ -1,16 +1,16 @@
 {
   "files": {
-    "main.css": "/raycaster/static/css/main.07c402ee.css",
-    "main.js": "/raycaster/static/js/main.94e01e42.js",
-    "static/js/787.81e48b36.chunk.js": "/raycaster/static/js/787.81e48b36.chunk.js",
-    "static/js/floorCeil.worker.15630a33.worker.js": "/raycaster/static/js/floorCeil.worker.15630a33.worker.js",
-    "index.html": "/raycaster/index.html",
-    "main.07c402ee.css.map": "/raycaster/static/css/main.07c402ee.css.map",
-    "main.94e01e42.js.map": "/raycaster/static/js/main.94e01e42.js.map",
-    "787.81e48b36.chunk.js.map": "/raycaster/static/js/787.81e48b36.chunk.js.map"
+    "main.css": "/static/css/main.7a62283b.css",
+    "main.js": "/static/js/main.8b241564.js",
+    "static/js/787.81e48b36.chunk.js": "/static/js/787.81e48b36.chunk.js",
+    "static/js/floorCeil.worker.15630a33.worker.js": "/static/js/floorCeil.worker.15630a33.worker.js",
+    "index.html": "/index.html",
+    "main.7a62283b.css.map": "/static/css/main.7a62283b.css.map",
+    "main.8b241564.js.map": "/static/js/main.8b241564.js.map",
+    "787.81e48b36.chunk.js.map": "/static/js/787.81e48b36.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.07c402ee.css",
-    "static/js/main.94e01e42.js"
+    "static/css/main.7a62283b.css",
+    "static/js/main.8b241564.js"
   ]
 }
